@@ -1,0 +1,12 @@
+Problema:
+
+Dado un conjunto de monedas quiero saber la cantidad de sumas distintas que puedo hacer con estas monedas.
+
+Sé que está cantidad c está acotada por: 0 y S donde S representa la suma de todas las monedas. Dado que S es chico por los inputs, 
+se me ocurre iterar sobre las S posibles sumas y verificar si es posible alcanzarla con mi conjunto de monedas.
+
+En primer lugar, se me ocurrió una memorización del estilo:
+
+vector<int> memo(S+1, -1);
+
+Donde la posición memo[i] iba a determinar si es posible alcanzar dicha suma. El problema de esto es que pueden suceder cosas como:
