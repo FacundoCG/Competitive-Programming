@@ -1,63 +1,141 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-bool isGreater(tuple<long long, long long, long long>& a, tuple<long long, long long, long long>& b){
-    bool res = true;
+typedef long long ll;
+typedef tuple<ll,ll,ll> project;
+const long long UNDEFINED = -1;
 
-    if ()
+bool greaterProject(project A, project B){
+    ll endingDayA = get<1>(A);
+    ll endingDayB = get<1>(B);
+
+    if (endingDayA > endingDayB){
+        return true;
+    } else if (endingDayA < endingDayB){
+        return false;
+    }
+
+    ll startingDayA = get<0>(A);
+    ll startingDayB = get<0>(B);
+
+    if (startingDayA > startingDayB){
+        return true;
+    }
+
+    return false;
 }
 
-vector<tuple<long long, long long, long long>> merge(vector<tuple<long long, long long, long long>>& A, vector<tuple<long long, long long, long long>>& B){
-    int n = A.size();
-    int m = B.size();
-    int i = 0;
-    int j = 0;
-    int k = 0;
+vector<project> merge(vector<project> &arr1, vector<project> &arr2)
+{
+    int n = arr1.size();
+    int m = arr2.size();
+    int t = n + m;
+    vector<project> res(t);
 
-    vector<tuple<long long, long long, long long>> res(n+m);
-    
-    while (i < n || j < m){
-        if (i < n && j < m){
-            if (isGreater(A[i], B[j])){
-                res[k] = B[j];
-                k++;
+    int j = 0;
+    int h = 0;
+
+    for (int i = 0; i < t; i++)
+    {
+        if (j < n && h < m)
+        {
+            if (greaterProject(arr2[h], arr1[j]))
+            {
+                res[i] = arr1[j];
                 j++;
-            } else {
-                res[k] = A[i];
-                k++;
-                i++;
             }
-        } else if (i < n){
-            res[k] = A[i];
-            k++;
-            i++;
-        } else {
-            res[k] = B[j];
-            k++;
+            else
+            {
+                res[i] = arr2[h];
+                h++;
+            }
+        }
+
+        else if (j < n)
+        {
+            res[i] = arr1[j];
             j++;
+        }
+        else
+        {
+            res[i] = arr2[h];
+            h++;
         }
     }
 
     return res;
 }
 
+vector<project> mergeSort(vector<project> &arr)
+{   
+    // Worst and best case: O(n * log n)
+    // The algorithm is stable but not in place
 
+    int n = arr.size();
 
-vector<tuple<long long, long long, long long>> mergeSort(vector<tuple<long long, long long, long long>>& A, int i, int j){
-    if (i == j){
-        return A;
+    if (n <= 1)
+    {
+        return arr;
     }
 
-    int middle = i/2 + j/2;
+    int mid = n / 2;
 
-    vector<tuple<long long, long long, long long>> leftHalf = mergeSort(A, i, middle);
-    vector<tuple<long long, long long, long long>> rightHalf = mergeSort(A, middle+1, j);
+    vector<project> leftHalf, rightHalf;
 
-    return merge(leftHalf, rightHalf);
+    for (int i = 0; i < mid; i++)
+    {
+        leftHalf.push_back(arr[i]);
+    }
+
+    for (int i = mid; i < n; i++)
+    {
+        rightHalf.push_back(arr[i]);
+    }
+
+    vector<project> res1 = mergeSort(leftHalf);
+    vector<project> res2 = mergeSort(rightHalf);
+
+    return merge(res1, res2);
 }
 
+int findPreviousProject(vector<project> &A, int i){
+    int left = 0;
+    int right = i-1;
+    int startingDate = get<0>(A[i]);
+    int n = A.size();
 
+    while (left <= right){
+        int middle = left/2 + right/2;
+        int endingDate = get<1>(A[middle]);
 
+        if (endingDate < startingDate){
+            if (middle == right || (middle+1 < n && get<1>(A[middle+1]) >= startingDate)){
+                return middle;
+            }
+            left = middle + 1;
+        } else {
+            right = middle - 1;
+        }
+    }
+
+    return -1; // If there aren't any valid project
+}
+
+ll maximumRewardTD(vector<project> &A, vector<ll> &memo, int i){
+    if (i == -1){ // Base case: I don't have any project
+        return 0;
+    }
+
+    if (memo[i] == UNDEFINED){ // Recursive case
+        ll ignoreProject = maximumRewardTD(A, memo, i-1); // I don't take the project
+        ll rewardOfProject = get<2>(A[i]);
+        ll j = findPreviousProject(A, i);
+        ll takeProject = (ll) rewardOfProject + maximumRewardTD(A, memo, j); // I take the project
+        memo[i] = max(ignoreProject, takeProject);
+    }
+
+    return memo[i];
+}
 
 int main() {
     ios :: sync_with_stdio(0);
@@ -66,13 +144,18 @@ int main() {
     int n;
     cin >> n;
 
-
-    vector<tuple<long long, long long, long long>> projects(n);
+    vector<project> projects(n);
 
     for (int i = 0; i < n; i++) {
-        long long s, e, r;
+        ll s, e, r;
         cin >> s >> e >> r;
         projects[i] = {s, e, r};
     }
 
+    vector<ll> memo(n, UNDEFINED);
+
+    vector<project> sortedProjects = mergeSort(projects);
+    ll res = maximumRewardTD(sortedProjects, memo, n-1);
+
+    cout << res << "\n";
 }

@@ -1,0 +1,145 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef long long ll;
+typedef long double ld;
+
+const ll UNDEFINED = -1;
+const int MAX_N = 1e5 + 1;
+const int MOD = 1e9 + 7;
+const int INF = 1e9;
+const ll LINF = 1e18;
+const ll zero = 0;
+const ld EPSILON = 1e-10;
+const double PI = acos(-1.0);
+
+#define pb push_back
+#define fst first
+#define snd second
+#define esta(x,c) ((c).find(x) != (c).end())  // Devuelve true si x es un elemento de c.
+#define all(c) (c).begin(),(c).end()
+#define SIZE(c) int((c).size())
+
+#define DBG(x) cerr << #x << " = " << (x) << endl
+#define RAYA cerr << "----------" << endl
+
+#define forn(i,n) for (int i=0;i<(int)(n);i++)
+#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
+#define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
+#define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
+#define dforall(i,c) for(auto i=(c).rbegin(), i != (c).rend(); i--)
+
+// Show vector
+template <typename T>
+ostream & operator <<(ostream &os, const vector<T> &v) {
+    os << "[";
+    forn(i, v.size()) {
+        if (i > 0) os << ",";
+        os << v[i];
+    }
+    return os << "]";
+}
+
+// Show pair
+template <typename T1, typename T2>
+ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
+    os << "{" << p.first << "," << p.second << "}";
+    return os;
+}
+
+// Show set
+template <typename T>
+ostream & operator <<(ostream &os, const set<T> &s) {
+    os << "{";
+    for(auto it = s.begin(); it != s.end(); it++){
+        if(it != s.begin()) os << ",";
+        os << *it;
+    }
+    return os << "}";
+}
+
+
+// Rango de int: -2*10^9 <= x <= 2*10^9
+// Rango de long long: -9*10^18 <= x <= 9*10^18
+
+// ############################################################### //
+
+vector<ll> calculatePrefixSum(vector<ll> &A){
+    vector<ll> prefixSum(A.size());
+
+    prefixSum[0] = A[0];
+
+    forsn(i, 1, A.size()){
+        prefixSum[i] = A[i] + prefixSum[i-1];
+    }
+
+    return prefixSum;
+}
+
+ll calculateSumInterval (vector<ll> &prefixSum, ll r){
+    int n = prefixSum.size();
+
+    if (r == 0){
+        return 0;
+    }
+
+    ll numberOfConcatenatedPermutations = r/n;
+    ll restingElements = r % n;
+    ll currentCycle = r/n;
+    ll sumInterval = (ll) prefixSum[n-1]*numberOfConcatenatedPermutations;
+
+    if (currentCycle + restingElements - 1 < n){
+        sumInterval += (ll) prefixSum[currentCycle + restingElements - 1];
+
+        if (currentCycle != 0){
+            sumInterval -= (ll) prefixSum[currentCycle-1];
+        } 
+    } else {
+        sumInterval += (ll) prefixSum[n-1] - prefixSum[currentCycle-1];
+        // Son los elementos que me faltaron colocar de la permutación C_i
+        // Yo sume: (B[i] + ... + B[n-1]) y me falta sumar (B[0] + ... )
+        ll remainderElemnts = (ll) restingElements - (n - currentCycle);
+        sumInterval += prefixSum[remainderElemnts-1];
+    }
+
+    return sumInterval;
+}
+
+void solve(vector<ll> &A, vector<pair<ll,ll>> &queries){
+    vector<ll> prefixSum = calculatePrefixSum(A);
+
+    forn(i, queries.size()){
+        ll l = queries[i].first;
+        ll r = queries[i].second;
+        // Calculo la suma desde (B[1] + ... + B[r]) y le resto (B[1] + ... + B[l-1])
+        ll sumInterval = (ll) calculateSumInterval(prefixSum, r) - calculateSumInterval(prefixSum, l-1);
+        cout << sumInterval << "\n";
+    }
+}
+
+int main() {
+    ios :: sync_with_stdio(0);
+    cin.tie(0);
+ 
+    int t;
+    cin >> t;
+
+    forn(_,t){
+        ll n,q;
+        cin >> n >> q;
+
+        vector<ll> A(n);
+        forn(i,n) cin >> A[i];
+
+        vector<pair<ll,ll>> queries(q);
+
+        forn(i,q){
+            ll l,r;
+            cin >> l >> r;
+            queries[i] = {l,r};
+        }
+
+        solve(A, queries);
+    }
+}
