@@ -2,26 +2,33 @@
 using namespace std;
 
 typedef long long ll;
-const ll UNDEFINED = -1;
+typedef long double ld;
 
+const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
 const int MOD = 1e9 + 7;
 const int INF = 1e9;
-const ll NEG_INF = LLONG_MIN;
 const ll LINF = 1e18;
 const ll zero = 0;
+const ld EPSILON = 1e-10;
+const double PI = acos(-1.0);
+
 #define pb push_back
 #define fst first
 #define snd second
 #define esta(x,c) ((c).find(x) != (c).end())  // Devuelve true si x es un elemento de c.
+#define all(c) (c).begin(),(c).end()
+#define SIZE(c) int((c).size())
 
 #define DBG(x) cerr << #x << " = " << (x) << endl
 #define RAYA cerr << "----------" << endl
+
 #define forn(i,n) for (int i=0;i<(int)(n);i++)
 #define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
-#define all(c) (c).begin(),(c).end()
+#define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
+#define dforall(i,c) for(auto i=(c).rbegin(), i != (c).rend(); i--)
 
 // Show vector
 template <typename T>
@@ -52,67 +59,46 @@ ostream & operator <<(ostream &os, const set<T> &s) {
     return os << "}";
 }
 
-
 // ############################################################### //
 
-vector<ll> prefixSum;
-
-ll dp(vector<ll> &A, vector<vector<vector<ll>>> &memo, int start, int end, int player){
-    int n = A.size();
-
-    if (start > end || start > n-1 || end < 0){
-        return 0;
-    }
-
-    if (memo[start][end][player] == UNDEFINED){
-        memo[start][end][player] = 0;
-
-        ll player2 = 0;
-
-        if (player == 0){
-            player2 = 1;
-        } 
-
-        ll rest1 = (ll) prefixSum[end] - prefixSum[start];
-        memo[start][end][player] = (ll) A[start] + rest1 - dp(A, memo, start+1, end, player2);
-
-        ll rest2 = 0;
-
-        if (end - 1 >= 0){
-            rest2 = (ll) prefixSum[end-1];
-
-            if (start - 1 >= 0){
-                rest2 -= (ll) prefixSum[start-1];
-            }
+void solve(ll b, ll c, ll d){
+    bitset<62> digitsOfB(b), digitsOfC(c), digitsOfD(d), digitsOfRes(0);
+    ll res = 0;
+    
+    dforn(i, 62){
+        if (digitsOfD[i] == 0){
+            if (digitsOfB[i] == 1 && digitsOfC[i] == 1) digitsOfRes[i] = 1;
+            if (digitsOfB[i] == 1 && digitsOfC[i] == 0) res = -1;
+            if (digitsOfB[i] == 0 && digitsOfC[i] == 0) digitsOfRes[i] = 0;
+            if (digitsOfB[i] == 0 && digitsOfC[i] == 1) digitsOfRes[i] = 0;
         }
-
-        ll option2 = (ll) A[end] + rest2 - dp(A, memo, start, end-1, player2);
-        memo[start][end][player] = max(memo[start][end][player], option2);
+        
+        if (digitsOfD[i] == 1){
+            if (digitsOfB[i] == 1 && digitsOfC[i] == 1) digitsOfRes[i] = 0;
+            if (digitsOfB[i] == 1 && digitsOfC[i] == 0) digitsOfRes[i] = 0;
+            if (digitsOfB[i] == 0 && digitsOfC[i] == 0) digitsOfRes[i] = 1;
+            if (digitsOfB[i] == 0 && digitsOfC[i] == 1) res = -1;
+        }
     }
-
-    return memo[start][end][player];
+    
+    if (res != -1){
+        res = digitsOfRes.to_ullong();
+    }
+    
+    cout << res << "\n";
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
  
-    int n;
-    cin >> n;
-
-    vector<ll> values(n);
-    vector<vector<vector<ll>>> memo(n, vector<vector<ll>>(n, vector<ll>(2, UNDEFINED)));
-    prefixSum.assign(n, 0);
-
-    forn(i,n) cin >> values[i];
-
-    prefixSum[0] = values[0];
-
-    forsn(i,1,n){
-        prefixSum[i] = (ll) prefixSum[i-1] + values[i];
-    }
-
-    ll res = dp(values, memo, 0, n-1, 0);
-
-    cout << res << "\n";
+    int t;
+    cin >> t;
+	
+	forn(_, t){
+		ll b, c, d;
+		cin >> b >> c >> d;
+		
+		solve(b, c, d);
+	}
 }

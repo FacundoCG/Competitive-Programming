@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "*.html": "html",
-        "cmath": "cpp",
-        "complex": "cpp",
-        "iostream": "cpp",
-        "ostream": "cpp"
-    }
-}

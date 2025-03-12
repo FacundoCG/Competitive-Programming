@@ -58,56 +58,63 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 // ############################################################### //
 vector<vector<int>> adjList;
 vector<bool> visited;
-vector<vector<int>> nodesPerLevel;
-int lastLevel;
+vector<int> numberOfDescendants;
+int n;
 
-void calculateLevelFrom(int v, int currentHeight){
-    nodesPerLevel[currentHeight].pb(v);
+ll totalDistances(int v, int currentDepth){
+    visited[v] = true;
+    ll res = 0;
+
+    for (int u : adjList[v]){
+        if (!visited[u]){
+            res += (ll) currentDepth;
+            res += (ll) totalDistances(u, currentDepth+1);
+        }
+    }
+
+    return res;
+}
+
+void calculateNumberOfDescendants(int v){
     visited[v] = true;
 
     for (int u : adjList[v]){
         if (!visited[u]){
-            calculateLevelFrom(u, currentHeight+1);
+            calculateNumberOfDescendants(u);
+            numberOfDescendants[v] += 1 + numberOfDescendants[u];
         }
     }
 }
 
-int solve(vector<vector<int>> &memo){
-    // The complexity time is O(|E|) because I iterate over all the neighborhoods of all the vertices
+void solve(int v, int parent, vector<ll> &res){
+    visited[v] = true;
 
-    dforn(i, lastLevel+1){
-        for (auto v : nodesPerLevel[i]){
-            for (auto u : adjList[v]){
-                if (visited[u]){
-                    // I just can sum the nodes that I have already precalculated
-                    memo[v][1] += memo[u][0]; // It means that I can't use v so u is free
-                }
-            }
-
-            for (auto u : adjList[v]){
-                if (visited[u]){
-                    // I choose the best possible edge (u, v). All the rest vertices will be free except for u
-                    memo[v][0] = max(memo[v][0], 1 + memo[v][1] - memo[u][0] + memo[u][1]);
-                }
-            }
-
-            visited[v] = true;
-        }
+    if (v != 0){
+        //DBG(v);
+        //DBG(numberOfDescendants[v]);
+        ll nodesThatIAmFarNow = (ll) n - numberOfDescendants[v] - 2;
+        //DBG(nodesThatIAmFarNow);
+        res[v] = (ll) res[parent] - numberOfDescendants[v] + nodesThatIAmFarNow; 
     }
 
-    return memo[0][0]; // Return the max amount of matching for a rooted tree in 0
+    for (int u : adjList[v]){
+        if (!visited[u]){
+            solve(u, v, res);
+        }
+    }
 }
+
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
     
-    int n;
     cin >> n;
 
     adjList.resize(n);
     visited.resize(n);
-    nodesPerLevel.resize(n);
+    numberOfDescendants.resize(n);
+    vector<ll> res(n);
 
     forn(i,n-1){
         int w, v;
@@ -119,22 +126,17 @@ int main() {
         adjList[v].pb(w);
     }
 
-    calculateLevelFrom(0, 0);
-    vector<vector<int>> memo(n, vector<int>(2, 0));
-    // memo[i][0] means that the vertex i is free, so I can decide if I want to use it
-    // memo[i][1] means that the vertex i is already used by its father, so I can't use any edge of and all its children will be free
+    res[0] = totalDistances(0, 1); // The sum of all the distances from 0 to the rest of the vertices
+
+    forn(i, n) visited[i] = false;
+    calculateNumberOfDescendants(0);
+
+    forn(i, n) visited[i] = false;
+    solve(0, 0, res);
 
     forn(i, n){
-        visited[i] = false;
+        cout << res[i] << " ";
     }
 
-    dforn(i, n){
-        if (!nodesPerLevel[i].empty()){
-            lastLevel = i;
-            break;
-        }
-    }
-
-    int res = solve(memo);
-    cout << res << "\n";
+    cout << "\n";
 }

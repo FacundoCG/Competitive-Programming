@@ -7,7 +7,6 @@ const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
 const int MOD = 1e9 + 7;
 const int INF = 1e9;
-const ll NEG_INF = LLONG_MIN;
 const ll LINF = 1e18;
 const ll zero = 0;
 #define pb push_back
@@ -55,64 +54,36 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-vector<ll> prefixSum;
+ll binarySearch(ll b, ll c, ll n, ll start, ll end){
+    ll l = (ll) start - 1;
+    ll r = (ll) end + 1;
 
-ll dp(vector<ll> &A, vector<vector<vector<ll>>> &memo, int start, int end, int player){
-    int n = A.size();
+    while (r - l > 1){
+        ll mid = (ll) l/2 + r/2;
+        ll value = (ll) mid*b + c;
 
-    if (start > end || start > n-1 || end < 0){
-        return 0;
-    }
-
-    if (memo[start][end][player] == UNDEFINED){
-        memo[start][end][player] = 0;
-
-        ll player2 = 0;
-
-        if (player == 0){
-            player2 = 1;
-        } 
-
-        ll rest1 = (ll) prefixSum[end] - prefixSum[start];
-        memo[start][end][player] = (ll) A[start] + rest1 - dp(A, memo, start+1, end, player2);
-
-        ll rest2 = 0;
-
-        if (end - 1 >= 0){
-            rest2 = (ll) prefixSum[end-1];
-
-            if (start - 1 >= 0){
-                rest2 -= (ll) prefixSum[start-1];
-            }
+        if (true){
+            l = mid;
+        } else {
+            r = mid;
         }
-
-        ll option2 = (ll) A[end] + rest2 - dp(A, memo, start, end-1, player2);
-        memo[start][end][player] = max(memo[start][end][player], option2);
     }
 
-    return memo[start][end][player];
+    return l; // l es el ultimo elemento que cumple P(X)
 }
+
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
  
-    int n;
-    cin >> n;
+    int t;
+    cin >> t;
 
-    vector<ll> values(n);
-    vector<vector<vector<ll>>> memo(n, vector<vector<ll>>(n, vector<ll>(2, UNDEFINED)));
-    prefixSum.assign(n, 0);
+    forn(_,t){
+        ll n, b, c;
+        cin >> n >> b >> c;
 
-    forn(i,n) cin >> values[i];
-
-    prefixSum[0] = values[0];
-
-    forsn(i,1,n){
-        prefixSum[i] = (ll) prefixSum[i-1] + values[i];
+        
     }
-
-    ll res = dp(values, memo, 0, n-1, 0);
-
-    cout << res << "\n";
 }
