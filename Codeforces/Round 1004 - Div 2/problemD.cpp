@@ -24,7 +24,7 @@ const double PI = acos(-1.0);
 #define RAYA cerr << "----------" << endl
 
 #define forn(i,n) for (int i=0;i<(int)(n);i++)
-#define forsn(i,s,n) for (ll i=(s);i<(ll)(n);i++)
+#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
 #define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
@@ -61,47 +61,77 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-ll calculateMaximumY(ll x, ll x0, ll r){
-	ll res = sqrtl(r*r - (x-x0)*(x-x0));
+ll findMissingElement(set<ll> &s, ll n){
+	ll res = 1;
+	
+	forsn(i, 1, n+1){
+		if (!esta(i, s)) res = i;
+	}
+	
 	return res;
 }
 
-void solve(vector<pair<ll, ll>> &circles){
-	ll res = 0;	
-	map<ll,ll> maxHeightForX;
+ll findIndexOf(vector<ll> &A, ll elem){
+	ll res = 0;
 	
-	forn(i, SIZE(circles)){
-		ll radius = (circles[i].snd - circles[i].fst)/2;
-		ll center = (circles[i].snd + circles[i].fst)/2;
-		
-		forsn(j, circles[i].fst, circles[i].snd+1){
-			// I am at the point (i, 0). I want to know what is the maximum height that I can have for points of the form (i, y)
-			ll maxY = calculateMaximumY(j, center, radius);
-			maxHeightForX[j] = max(maxHeightForX[j], maxY);
-		}
+	forn(i, SIZE(A)){
+		if (A[i] == elem) res = i;
 	}
 	
-	for(auto p : maxHeightForX) res += 2*p.snd + 1; // This is because I sum the points with y from the range [-p.snd, p.snd] 
-	cout << res << "\n";
+	return res;
+}
+
+void makeQuery(ll i, ll j){
+	cout << "? " << i << " " << j << endl; 
+	cout.flush();
+}
+
+int solve(vector<ll> &A){
+	set<ll> s(all(A));
+	ll n = SIZE(A);
+	ll resQuery;
+	
+	if (SIZE(s) == SIZE(A)){
+		ll i = findIndexOf(A, n)+1;
+		ll j = findIndexOf(A, 1)+1;
+		makeQuery(i, j);
+		cin >> resQuery;
+		
+		if (resQuery < n-1) cout << "! A" << endl;
+		else if (resQuery >= n) cout << "! B" << endl;
+		else {
+			makeQuery(j, i);
+			cin >> resQuery;
+			
+			if (resQuery != n-1) cout << "! A" << endl;				
+			else cout << "! B" << endl;
+		}
+	} else {
+		ll missingElement = findMissingElement(s, n);
+		ll i = 1;
+		if (missingElement == i) i = 2; 
+		makeQuery(missingElement, i);
+		cin >> resQuery;
+		
+		if (resQuery != 0) cout << "! B" << endl;
+		else cout << "! A" << endl; // I have repetitions of points so it has to be a graph
+	}
+	
+	cout.flush();
+	
+	return 0;
 }
 
 int main() {
-    ios :: sync_with_stdio(0);
-    cin.tie(0);
- 
     int t;
     cin >> t;
-    
-    forn(_, t){
-		ll n, m;
-		cin >> n >> m;
-		
-		vector<pair<ll, ll>> circles(n);
-		vector<ll> centers(n);
-		vector<ll> radius(n);
-		forn(i, n) cin >> centers[i];
-		forn(i, n) cin >> radius[i];
-		forn(i, n) circles[i] = {centers[i] - radius[i], centers[i] + radius[i]};
-		solve(circles);
+	
+	forn(_, t){
+        ll n;
+        cin >> n;
+        
+        vector<ll> A(n);
+        forn(i, n) cin >> A[i];
+        solve(A);
 	}
 }

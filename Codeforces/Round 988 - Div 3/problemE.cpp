@@ -24,7 +24,7 @@ const double PI = acos(-1.0);
 #define RAYA cerr << "----------" << endl
 
 #define forn(i,n) for (int i=0;i<(int)(n);i++)
-#define forsn(i,s,n) for (ll i=(s);i<(ll)(n);i++)
+#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
 #define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
@@ -59,49 +59,86 @@ ostream & operator <<(ostream &os, const set<T> &s) {
     return os << "}";
 }
 
+
+// Rango de int: -2*10^9 <= x <= 2*10^9
+// Rango de long long: -9*10^18 <= x <= 9*10^18
+
 // ############################################################### //
 
-ll calculateMaximumY(ll x, ll x0, ll r){
-	ll res = sqrtl(r*r - (x-x0)*(x-x0));
-	return res;
+void makeQuery(ll i, ll j){
+	cout << "? " << i << " " << j << endl;
+	cout.flush();
 }
 
-void solve(vector<pair<ll, ll>> &circles){
-	ll res = 0;	
-	map<ll,ll> maxHeightForX;
-	
-	forn(i, SIZE(circles)){
-		ll radius = (circles[i].snd - circles[i].fst)/2;
-		ll center = (circles[i].snd + circles[i].fst)/2;
+int solve(ll n){
+    string res = "IMPOSSIBLE";
+    ll j = n;
+    ll resQuery, lastQuery;
+    makeQuery(1, j);
+    cin >> resQuery;
+    
+    if (resQuery == 0){
+		cout << "! " << res << endl;
+		cout.flush();
+		return 0;
+	} else if (n == 2 && resQuery != 0){
+		res = "01";
+		cout << "! " << res << endl;
+		cout.flush();
+		return 0;
+	}
+    
+    j--;
+    lastQuery = resQuery;
+    res = "";
+    
+    while (j > 1 && lastQuery > 0){
+		makeQuery(1, j);
+		cin >> resQuery;
 		
-		forsn(j, circles[i].fst, circles[i].snd+1){
-			// I am at the point (i, 0). I want to know what is the maximum height that I can have for points of the form (i, y)
-			ll maxY = calculateMaximumY(j, center, radius);
-			maxHeightForX[j] = max(maxHeightForX[j], maxY);
+		if (resQuery == lastQuery){ // I had a 0 to the final because it didn't change the value
+			res += '0';
+		} else {
+			res += '1';
+		}
+		
+		if (resQuery == 0){
+			ll zerosLeft = lastQuery;
+			ll onesLeft = j-zerosLeft;
+			forn(_, zerosLeft) res += '0';
+			forn(_, onesLeft) res += '1';
+			break;
+		} else {
+			lastQuery = resQuery;
+			j--;
 		}
 	}
 	
-	for(auto p : maxHeightForX) res += 2*p.snd + 1; // This is because I sum the points with y from the range [-p.snd, p.snd] 
-	cout << res << "\n";
+	if (j <= 1){
+		res += '1';
+		res += '0';
+	}
+	
+	reverse(all(res));
+	cout << "! " << res << endl;
+	cout.flush();
+	return 0;
 }
 
+
 int main() {
-    ios :: sync_with_stdio(0);
-    cin.tie(0);
- 
     int t;
     cin >> t;
     
-    forn(_, t){
-		ll n, m;
-		cin >> n >> m;
-		
-		vector<pair<ll, ll>> circles(n);
-		vector<ll> centers(n);
-		vector<ll> radius(n);
-		forn(i, n) cin >> centers[i];
-		forn(i, n) cin >> radius[i];
-		forn(i, n) circles[i] = {centers[i] - radius[i], centers[i] + radius[i]};
-		solve(circles);
-	}
+    forn(_,t){
+		ll n;
+		cin >> n;
+		solve(n);
+    }
 }
+
+
+
+
+
+

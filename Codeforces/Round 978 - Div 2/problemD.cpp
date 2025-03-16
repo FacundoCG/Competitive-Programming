@@ -61,47 +61,77 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-ll calculateMaximumY(ll x, ll x0, ll r){
-	ll res = sqrtl(r*r - (x-x0)*(x-x0));
+void makeQuery(ll i, ll j){
+	cout << "? " << i << " " << j << endl;
+	cout.flush();
+}
+
+ll determineImpostor(ll c1, ll c2, bool case1){
+	ll k = 1;
+	if (c1 == k) k = 3;
+	ll res = 0;
+	ll resQuery1, resQuery2;
+	makeQuery(k, c1);
+	cin >> resQuery1;
+	makeQuery(k, c2);
+	cin >> resQuery2;
+	
+	if (case1){
+		if (resQuery1 == resQuery2) res = c2;
+		else res = c1;	
+	} else {
+		if (resQuery1 == resQuery2) res = c1;
+		else res = c2;
+	}
+	
 	return res;
 }
 
-void solve(vector<pair<ll, ll>> &circles){
-	ll res = 0;	
-	map<ll,ll> maxHeightForX;
+void solve(ll n){
+	ll res;
+	ll i = 1;
+	ll resQuery1, resQuery2;
+	ll c1 = UNDEFINED;
+	ll c2 = UNDEFINED;
+	bool case1 = true;
 	
-	forn(i, SIZE(circles)){
-		ll radius = (circles[i].snd - circles[i].fst)/2;
-		ll center = (circles[i].snd + circles[i].fst)/2;
+	while (i <= n-1 && c1 == UNDEFINED){ // I allways pick the pair (i, i+1)
+		makeQuery(i, i+1);
+		cin >> resQuery1;
+		makeQuery(i+1, i);
+		cin >> resQuery2;
 		
-		forsn(j, circles[i].fst, circles[i].snd+1){
-			// I am at the point (i, 0). I want to know what is the maximum height that I can have for points of the form (i, y)
-			ll maxY = calculateMaximumY(j, center, radius);
-			maxHeightForX[j] = max(maxHeightForX[j], maxY);
+		if (resQuery1 == 1 && resQuery2 == 0){
+			// This case is: (i is knight and j is impostor) or (i is impostor and j is knave)
+			c1 = i;
+			c2 = i+1;
+		} else if (resQuery1 == 0 && resQuery2 == 1) {
+			// This case is: (i is knave and j is impostor) or (i is impostor and j is knight)
+			c1 = i;
+			c2 = i+1;
+			case1 = false;
 		}
+		
+		i += 2;
 	}
 	
-	for(auto p : maxHeightForX) res += 2*p.snd + 1; // This is because I sum the points with y from the range [-p.snd, p.snd] 
-	cout << res << "\n";
+	if (c1 == UNDEFINED){
+		res = n;
+	} else { // Given the candidates c1 and c2 I determine who is the impostor between them
+		res = determineImpostor(c1, c2, case1);
+	}
+	
+	cout << "! " << res << endl;
+	cout.flush();
 }
 
 int main() {
-    ios :: sync_with_stdio(0);
-    cin.tie(0);
- 
     int t;
     cin >> t;
     
     forn(_, t){
-		ll n, m;
-		cin >> n >> m;
-		
-		vector<pair<ll, ll>> circles(n);
-		vector<ll> centers(n);
-		vector<ll> radius(n);
-		forn(i, n) cin >> centers[i];
-		forn(i, n) cin >> radius[i];
-		forn(i, n) circles[i] = {centers[i] - radius[i], centers[i] + radius[i]};
-		solve(circles);
+		ll n;
+		cin >> n;
+		solve(n);
 	}
 }
