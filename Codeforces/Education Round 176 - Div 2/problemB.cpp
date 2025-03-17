@@ -68,9 +68,17 @@ void solve(vector<ll> &A){
 	sort(all(B));
 	
 	if (k == 1){
-	
+		ll leftElement = A[0];
+		ll rightElement = A[n-1];
+		res = A[0] + A[n-1];
+
+		forsn(i, 1, n-1){
+			ll opt1 = A[i] + max(leftElement, rightElement);
+			res = max(res, opt1);
+		}
 	} else {
-		dforsn(i, 1, n) res += A[i];
+		int j = n-(k+1);
+		dforsn(i, j, n) res += B[i];
 	}
 	
 	cout << res << "\n";
@@ -86,7 +94,7 @@ int main() {
 		cin >> n >> k;
 		vector<ll> A(n);
 		forn(i, n) cin >> A[i];
-		solve(A, n, k);
+		solve(A);
 	}
 	
 	return 0;

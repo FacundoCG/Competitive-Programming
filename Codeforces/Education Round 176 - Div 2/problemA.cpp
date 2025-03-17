@@ -60,38 +60,6 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-ll calculateMinOperations(ll m, ll a, ll b, ll n, int c, int d){
-	ll res = 0;
-	ll k = a;
-	ll j = 0;
-	
-	DBG(n);
-	DBG(k);
-	
-	while (n > k && j < 1000){
-		DBG(m);
-		ll x = m/2;
-		ll y = m/2;
-		
-		if (m % 2 != 0){
-			x += c; y += d;
-		} 
-		
-		ll newN = n - (x*a + b*y);
-		if (newN <= k) {
-			n = newN;
-			DBG(x);
-			DBG(y);
-			res = x + y;
-		}
-		m++;
-		j++;
-	}
-	
-	DBG(res);
-	
-	return res;
-}
 
 int solve(ll n, ll k){
 	ll res = 0;
