@@ -24,7 +24,7 @@ const double PI = acos(-1.0);
 #define RAYA cerr << "----------" << endl
 
 #define forn(i,n) for (int i=0;i<(int)(n);i++)
-#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define forsn(i,s,n) for (ll i=(s);i<(ll)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
 #define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
@@ -61,38 +61,60 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
-	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+void update(bitset<64> &dx, int i){
+	while (dx[i] != 0){
+		dx[i] = 0; i++;
 	}
 	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
+	dx[i] = 1;
+}
+
+void solve(ll x, ll y){
+	// Let's be: a = x + k and b = y + k
+ 	// We want to have: a + b = a XOR b
+	// We will start with a = k and b = k. If we need it, we will sum 2^i to a or b
+	
+	bitset<64> da(x);
+	bitset<64> db(y);
+	bitset<64> dk(0);
+	forn(i, 50){
+		if (da[i] == 1 && db[i] == 1) { // We can't have a[i] = 1 and b[i] = 1 to satisfy the equality. So, I sum 2^i to a and b in order to avoid this case
+			dk[i] = 1; update(da, i+1); update(db, i+1);
+		} else if (da[i] == 1 && db[i] == 0){			
+			if (da[i+1] == 0 && db[i+1] == 0){ // I will sum 2^i to a in order to have a better case for the future since da[i] = 0 and db[i] = 0 doesn't allow me to add anything
+				dk[i] = 1; da[i+1] = 1;
+			} else if (da[i+1] == 1 && db[i+1] == 1){ // This is a bad case, so I avoid it
+				dk[i] = 1; update(da, i+1);
+			}
+		} else if (da[i] == 0 && db[i] == 1){
+			if (da[i+1] == 0 && db[i+1] == 0){
+				dk[i] = 1; db[i+1] = 1;
+			} else if (da[i+1] == 1 && db[i+1] == 1){
+				dk[i] = 1; update(db, i+1);
+			}
+		}
 	}
 	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
-	cout << res << "\n";
+	ll k = dk.to_ullong();
+	ll c = (x+k) + (y+k);
+	ll d = (x+k) ^ (y+k);
+	
+	if (c == d){
+		cout << k << "\n";
+	} else {
+		cout << -1 << "\n";
+	}
 }
 
 int main() {
-    ios :: sync_with_stdio(0);
-    cin.tie(0);
 	
 	int t;
 	cin >> t;
-	
 	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
+		ll x, y;
+		cin >> x >> y;
+		solve(x, y);
 	}
+
+	return 0;
 }

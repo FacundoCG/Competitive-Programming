@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -61,38 +61,78 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
+const int COTA_SUP = pow(10, 6) + 1;
+
+int n, k;
+int repetitionsA[COTA_SUP];
+int repetitionsB[COTA_SUP];
+int M[COTA_SUP];
+bool belongsToB[COTA_SUP];
+
+int sumDigits(int m) {
+    int sum = 0;
+    while (m > 0) {
+        sum += m % 10;
+        m /= 10;      
+    }
+    return sum;
+}
+
+void solve(priority_queue<int> &B){	
+	int res = 0;
 	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+	// While I have turns and elements to simulate
+	while (k >= 1 && !B.empty()){		
+		int e = B.top();
+		B.pop();
+		int r = repetitionsB[e];
+		
+		if (r < k){
+			k -= r;
+			repetitionsB[e] = 0;
+			belongsToB[e] = false;
+			e = M[e];
+			if (e != 0){
+				if (!belongsToB[e]){
+					belongsToB[e] = true;
+					B.push(e);
+				}
+				
+				repetitionsB[e] += r;
+			}
+		} else {
+			k = 0;
+			res = sumDigits(e);
+		}
 	}
-	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
-	}
-	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
+		
 	cout << res << "\n";
 }
 
+void precalculate(){
+	forn(i, COTA_SUP){
+		M[i] = i - sumDigits(i);
+		repetitionsB[i] = 0;
+		belongsToB[i] = false;
+	}
+}
+ 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	int t;
-	cin >> t;
-	
-	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
+ 
+	precalculate();
+ 
+    cin >> n >> k;
+    priority_queue<int> B;
+    forn(i, n){
+		int a;
+		cin >> a;
+		if (repetitionsB[a] == 0) B.push(a);
+		repetitionsB[a]++;
+		belongsToB[a] = true;
 	}
+    
+    solve(B);
 }
+

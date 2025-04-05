@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -61,38 +61,34 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
-	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+ll n;
+
+ll dp(ll i, vector<ll> &A, vector<ll> &memo){
+	if (i < 0){
+		return 0;
 	}
 	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
+	if (memo[i] == UNDEFINED){
+		if (A[i] == 0){
+			memo[i] = dp(i-1, A, memo);
+		} else {
+			memo[i] = 1 + i - dp(i-1, A, memo);
+		}
 	}
 	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
-	cout << res << "\n";
+	return memo[i];
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	int t;
-	cin >> t;
-	
-	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
-	}
+     cin >> n;
+    
+    vector<ll> A(n);
+    vector<ll> memo(n, UNDEFINED);
+    forn(i, n) cin >> A[i];
+    dp(n-1, A, memo);
+    ll res = 0;
+    forn(i, n) res += memo[i];
+    cout << res << "\n";
 }

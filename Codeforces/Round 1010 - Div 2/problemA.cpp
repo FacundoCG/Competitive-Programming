@@ -61,23 +61,44 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
+ll n, m;
+
+void solve(vector<string> &grid){
+	ll res = 0;
 	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+	vector<ll> onesPerRow(n);
+	vector<ll> onesPerColumn(m);
+	
+	forn(i, n){
+		forn(j, m) onesPerRow[i] += (grid[i][j] == '1');
 	}
 	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
+	forn(i, m){
+		forn(j, n) onesPerColumn[i] += (grid[j][i] == '1');
 	}
 	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
+	vector<ll> badRows;
+	vector<ll> badColumns;
+	
+	forn(i, n){
+		if (onesPerRow[i] % 2 == 1) badRows.pb(i);
+	}
+	
+	forn(i, m){
+		if (onesPerColumn[i] % 2 == 1) badColumns.pb(i);
+	}
+	
+	int j = min(SIZE(badRows), SIZE(badColumns));
+	res += min(SIZE(badRows), SIZE(badColumns));
+	
+	if (j < SIZE(badRows)){
+		res += SIZE(badRows) - j;
+	}
+	
+	if (j < SIZE(badColumns)){
+		res += SIZE(badColumns) - j;
+	}
+	
 	cout << res << "\n";
 }
 
@@ -89,10 +110,9 @@ int main() {
 	cin >> t;
 	
 	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
+		cin >> n >> m;
+		vector<string> grid(n);
+		forn(i, n) cin >> grid[i];
+		solve(grid);
 	}
 }

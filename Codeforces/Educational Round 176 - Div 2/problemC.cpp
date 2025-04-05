@@ -24,7 +24,7 @@ const double PI = acos(-1.0);
 #define RAYA cerr << "----------" << endl
 
 #define forn(i,n) for (int i=0;i<(int)(n);i++)
-#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define forsn(i,s,n) for (ll i=(s);i<(ll)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
 #define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
@@ -60,24 +60,64 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
+ll n, m;
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
+// Calcular extremo izquierdo que cumple P(X)
+ll leftBinarySearch(ll start, ll end, vector<ll> &A, ll c){
+    ll l = start - 1; 
+    ll r = end + 1; 
+
+    while(r - l > 1) { 
+        ll mid = (l + r) / 2;
+        if(!(A[mid] >= c)) {
+            l = mid;
+        } else {
+            r = mid;
+        }
+    }
+    
+    if (r < start || r > end || !(A[r] >= c)){
+		r = -1; // Si r no está en el intervalo [start,end] o no cumple la propiedad, entonces retorno -1
+	}
+
+    return r; // r es el primer elemento que cumple P(X)
+}
+
+
+void solve(vector<ll> &A){
+	ll res = 0;
+	map<ll,ll> M;
 	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+	forsn(i, 1, n+1){
+		ll j = leftBinarySearch(0, m-1, A, i);
+		ll numberOfElements = 0;
+		if (j != -1) numberOfElements = m-j;
+		M[i] = numberOfElements;
 	}
 	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
+	//~ DBG(A);
+	
+	//~ forsn(i, 1, n+1){
+		//~ DBG(i);
+		//~ DBG(M[i]);
+	//~ }
+	
+	//~ forsn(a, 1, (n/2) + 1){
+		//~ ll b = n-a;
+		//~ DBG(a); DBG(b);
+		//~ ll toSum = M[a]*M[b] - M[b];
+		//~ DBG(toSum);
+		
+		//~ res += M[a]*M[b] - M[b];
+	//~ }
+	
+	forsn(a, 1, n){
+		ll b = n-a;
+		ll toSum = M[a]*M[b] - M[max(a,b)];
+		//DBG(a); DBG(b); DBG(toSum);
+		res += toSum;
 	}
 	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
 	cout << res << "\n";
 }
 
@@ -85,14 +125,15 @@ int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
 	
-	int t;
+	ll t;
 	cin >> t;
-	
 	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
+		cin >> n >> m;
+		vector<ll> A(m);
+		forn(i, m) cin >> A[i];
+		sort(all(A));
+		solve(A);
 	}
+	
+	return 0;
 }

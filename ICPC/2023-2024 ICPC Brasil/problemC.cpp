@@ -3,10 +3,11 @@ using namespace std;
 
 typedef long long ll;
 typedef long double ld;
+typedef pair<int, int> edge;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -61,38 +62,76 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
-	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
-	}
-	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
-	}
-	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
-	cout << res << "\n";
+vector<bool> visited;
+
+int binary_search(vector<int>& A, int i, int j, int k){
+    if (i >= j){
+        return j;
+    }
+
+    int middle = (i/2) + (j/2);
+
+    if (A[middle] == k){
+        return middle;
+    } else if (k < A[middle]){
+        return binary_search(A, i, middle, k);
+    } else {
+        return binary_search(A, middle + 1, j, k);
+    }
 }
 
-int main() {
-    ios :: sync_with_stdio(0);
-    cin.tie(0);
+void dfs(int v, vector<int> &res, vector<vector<int>> &adjList, vector<int> &lis, vector<int> &val){
+	visited[v] = true;
+	res[v] = SIZE(lis);
 	
-	int t;
-	cin >> t;
-	
-	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
+	for (int w : adjList[v]){
+		if (!visited[w]){
+			if (val[w] > lis.back()){
+				lis.pb(val[w]);
+				dfs(w, res, adjList, lis, val);
+				lis.pop_back();
+			} else {
+				int positionElementIth = binary_search(lis, 0, SIZE(lis)-1, val[w]);
+				int oldValue = lis[positionElementIth];
+				lis[positionElementIth] = val[w];
+				dfs(w, res, adjList, lis, val);
+				lis[positionElementIth] = oldValue;
+			}
+		}
 	}
+}
+ 
+ 
+int main()
+{
+	cin.tie(0);
+    cin.sync_with_stdio(0);
+    
+	int n;
+	cin >> n;
+	
+	vector<vector<int>> adjList(n+1);
+	vector<int> val(n+1);
+	vector<int> res(n+1);
+	visited.resize(n+1);
+	
+	forsn(i, 2, n+1){
+		int p;
+		cin >> p;
+		adjList[i].pb(p);
+		adjList[p].pb(i);
+	}
+	
+	forsn(i, 1, n+1) cin >> val[i];
+	vector<int> lis;
+	lis.pb(val[1]);
+	
+	dfs(1, res, adjList, lis, val);
+	
+	forsn(i, 2, n+1){
+		cout << res[i] << " ";
+	}
+	
+	cout << "\n";
+    return 0;
 }

@@ -24,7 +24,7 @@ const double PI = acos(-1.0);
 #define RAYA cerr << "----------" << endl
 
 #define forn(i,n) for (int i=0;i<(int)(n);i++)
-#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define forsn(i,s,n) for (ll i=(s);i<(ll)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
 #define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
@@ -61,38 +61,64 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
+int solve(vector<int> &A){
+	vector<int> P;
+	vector<pair<int, int>> res;
 	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+	int n = SIZE(A);
+	forn(i, SIZE(A)){
+		if (A[i] == 0) P.pb(i);
 	}
 	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
+	if (SIZE(P) == 0){
+		cout << 1 << "\n";
+		cout << 1 << " " << n << "\n";
+		return 0;
 	}
 	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
-	cout << res << "\n";
+	if (P[0] == 0){
+		res.pb({1, 2});
+		if (SIZE(P) > 2 || (SIZE(P) == 2 && P[1] != 1)){
+			res.pb({2, n-1}); res.pb({1, 2});
+		} else {
+			res.pb({1, n-1});
+		}
+	} else if (P[0] == n-1){
+		res.pb({n-1, n}); res.pb({1, n-1});
+	} else if (P[0] == n-2){
+		res.pb({n-1, n});
+		
+		if (SIZE(P) > 2 || (SIZE(P) == 2 && P[1] != n-1)){
+			res.pb({1, n-2}); res.pb({1, 2});
+		} else {
+			res.pb({1, n-1});
+		}
+	} else {
+		int sizeLost = P[0];
+		res.pb({1, P[0]+1});
+		if (SIZE(P) == 1){
+			res.pb({1, n-sizeLost});
+		} else {
+			res.pb({2, n-sizeLost}); res.pb({1, 2});
+		}		
+	}
+	
+	cout << SIZE(res) << "\n";
+	forn(i, SIZE(res)) cout << res[i].fst << " " << res[i].snd << "\n";
+	return 0;
 }
 
 int main() {
-    ios :: sync_with_stdio(0);
-    cin.tie(0);
 	
 	int t;
 	cin >> t;
-	
 	forn(_, t){
 		int n;
 		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
+		vector<int> A(n);
+		forn(i, n) cin >> A[i];
+		solve(A);
 	}
+
+	return 0;
 }

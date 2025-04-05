@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -61,38 +61,27 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
+void solve(ll x, ll y, ll a){
+	ll k = a/(x+y);
+	double r = a + 0.5 - (x+y)*k;
 	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+	if (x >= r){
+		cout << "NO" << "\n";
+	} else {
+		cout << "YES" << "\n";
 	}
-	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
-	}
-	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
-	cout << res << "\n";
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	int t;
-	cin >> t;
-	
-	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
+ 
+    int t;
+    cin >> t;
+    
+    forn(_, t){
+		ll x, y, a;
+		cin >> x >> y >> a;
+		solve(x, y, a);
 	}
 }

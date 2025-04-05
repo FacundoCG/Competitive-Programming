@@ -24,7 +24,7 @@ const double PI = acos(-1.0);
 #define RAYA cerr << "----------" << endl
 
 #define forn(i,n) for (int i=0;i<(int)(n);i++)
-#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define forsn(i,s,n) for (ll i=(s);i<(ll)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
 #define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
@@ -61,38 +61,62 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
+bool checkAllLetters(string &s){
+	map<char, int> m;
+	forn(i, SIZE(s)) m[s[i]]++;
 	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+	return SIZE(m) == 1;
+}
+
+void linealCheck(string &s){
+	string res = "YES";
+	bool areDiff = false;
+	string t = s;
+	reverse(all(t));
+	//~ DBG(t);
+	//~ DBG(s);
+	
+	forn(i, SIZE(s)){
+		if (s[i] != t[i]){
+			areDiff = true;
+			if (s[i] > t[i]){
+				res = "NO";
+			}
+			
+			break;
+		}
 	}
 	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
-	}
-	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
+	if (!areDiff) res = "NO";
 	cout << res << "\n";
 }
 
+void solve(string &s, int k){
+	bool areEqual = checkAllLetters(s);
+	
+	if (areEqual){
+		cout << "NO\n";
+	} else {
+		if (k == 0){
+			linealCheck(s);
+		} else {
+			cout << "YES\n";
+		}
+	}	
+}
+
 int main() {
-    ios :: sync_with_stdio(0);
-    cin.tie(0);
 	
 	int t;
 	cin >> t;
-	
 	forn(_, t){
-		int n;
-		cin >> n;
+		int n, k;
+		cin >> n >> k;
+		
 		string s;
 		cin >> s;
-		solve(s);
+		solve(s, k);
 	}
+
+	return 0;
 }

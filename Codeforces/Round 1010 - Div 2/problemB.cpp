@@ -61,24 +61,37 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
-	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+ll calculateMaximum(ll x, ll m, ll n){
+	forn(_, n) {
+		x /= 2;
+		if (x == 0) break;
 	}
 	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
+	forn(_, m) {
+		x = (x+1)/2;
+		if (x <= 1) break;
 	}
 	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
-	cout << res << "\n";
+	return x;
+}
+ll calculateMinimum(ll x, ll m, ll n){
+	forn(_, m) {
+		x = (x+1)/2;
+		if (x <= 1) break;
+	}
+	forn(_, n) {
+		x /= 2;
+		if (x == 0) break;
+	}
+	return x;
+}
+
+int solve(ll x, ll n, ll m){
+	ll minimum = calculateMinimum(x, m, n);
+	ll maximum = calculateMaximum(x, m, n);
+	
+	cout << minimum << " " << maximum << "\n";	
+	return 0;
 }
 
 int main() {
@@ -89,10 +102,8 @@ int main() {
 	cin >> t;
 	
 	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
+		ll x, n, m;
+		cin >> x >> n >> m;
+		solve(x, n, m);
 	}
 }

@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -61,38 +61,36 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
-	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
-	}
-	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
-	}
-	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
-	cout << res << "\n";
-}
-
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
+ 
+    string s;
+    int k;
+    cin >> s >> k;
+    
+    vector<char> res(SIZE(s));
+    vector<bool> visited(SIZE(s));
+    int i = 0;
+    
+    while (!visited[i]){
+		visited[i] = true;
+		vector<char> t;
+		
+		for (int j = i; j < SIZE(s); j += k) {
+			t.pb(s[j]);
+			visited[j] = true;
+		}
+		
+		sort(all(t));
+		
+		int h = 0;
+		for (int j = i; j < SIZE(s); j += k) {res[j] = t[h]; h++;}
+		
+		i++;
+	} 
 	
-	int t;
-	cin >> t;
-	
-	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
-	}
+	string resString = "";
+	forn(j, SIZE(s)) resString += res[j];
+	cout << resString << "\n";
 }

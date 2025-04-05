@@ -3,6 +3,9 @@ using namespace std;
 
 typedef long long ll;
 typedef long double ld;
+typedef vector<vector<int>> vector2;
+typedef vector<vector2> vector3;
+typedef vector<vector3> vector4;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -12,6 +15,8 @@ const ll LINF = 1e18;
 const ll zero = 0;
 const ld EPSILON = 1e-10;
 const double PI = acos(-1.0);
+
+
 
 #define pb push_back
 #define fst first
@@ -60,24 +65,60 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
+ll n, m, res;
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
+int exploreRectangle(int i, int j, vector<string> &grid, vector<vector<int>> &M, vector<vector<int>> &depth){
+	ll c1 = grid[i][j] - 'a';
+	ll d1 = depth[i][j];
+	if (i + d1 >= n) return 0;
 	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+	ll c2 = grid[i+d1][j] - 'a';
+	ll d2 = depth[i+d1][j];
+	if (i + d1 + d2 >= n) return 0;
+	
+	ll c3 = grid[i+d1+d2][j] - 'a';
+	ll d3 = depth[i+d1+d2][j];
+	
+	if (d1 != d2 || d3 < d2) return 0;
+	
+	res += 1; // It means that I can make one flag of width 1 and height d2 for each color	
+	if (j-1 < 0) return 0;
+	
+	ll c4 = grid[i][j-1] - 'a';
+	ll d4 = depth[i][j-1];
+	if (d4 != d1 || c1 != c4) return 0;
+
+	ll c5 = grid[i+d1][j-1] - 'a';
+	ll d5 = depth[i+d1][j-1];
+	if (d5 != d2 || c5 != c2) return 0;
+	
+	ll c6 = grid[i+d1+d2][j-1] - 'a';
+	ll d6 = depth[i+d1+d2][j-1];
+	if (d6 < d5 || c6 != c3) return 0;
+	
+	// If I have k good tiles to my left, it means that I can make k flags using my current tile i,j to the left
+	M[i][j] = M[i][j-1] + 1;
+	res += M[i][j];
+	return 0;
+}
+
+void solve(vector<string> &grid){
+	res = 0;
+	
+	vector<vector<int>> depth(n, vector<int>(m, 1));
+	
+	for (ll i = n-2; i >= 0; i--){
+		forn(j, m){
+			if (grid[i][j] == grid[i+1][j]) depth[i][j] = 1 + depth[i+1][j];
+		}
 	}
 	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
+	vector<vector<int>> M(n, vector<int>(m, 0));
+	
+	forn(i, n){
+		forn(j, m) exploreRectangle(i, j, grid, M, depth);
 	}
 	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
 	cout << res << "\n";
 }
 
@@ -85,14 +126,8 @@ int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
 	
-	int t;
-	cin >> t;
-	
-	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
-	}
+	cin >> n >> m;
+	vector<string> grid(n);
+	forn(i, n) cin >> grid[i];
+	solve(grid);
 }

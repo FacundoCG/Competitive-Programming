@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -61,38 +61,54 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void solve(string &s){
-	string res = "";
-	res += s[0];
+int n, m;
+
+bool dfs(int i, int j, vector<string> &grid, vector<vector<bool>> &visited, vector<vector<int>> &sequenceRow, vector<vector<int>> &sequenceColumn){
+	if (i <= 0 || j <= 0 || visited[i][j]) return true;
+	visited[i][j] = true;
 	
-	forsn(i, 1, SIZE(s)){
-		if (s[i] <= s[i-1]) res += s[i];
-		else break;
+	if (grid[i][j] == '1' && sequenceRow[i][j-1] != j && sequenceColumn[i-1][j] != i) return false;
+	return dfs(i-1, j, grid, visited, sequenceRow, sequenceColumn) && dfs(i, j-1, grid, visited, sequenceRow, sequenceColumn);
+}
+
+void solve(vector<string> &grid){
+	vector<vector<bool>> visited(n, vector<bool>(m, false));
+	vector<vector<int>> sequenceRow(n, vector<int>(m, 0));
+	vector<vector<int>> sequenceColumn(n, vector<int>(m, 0));
+	
+	forn(i, n) sequenceRow[i][0] = (grid[i][0] == '1');
+	forn(i, n){
+		forsn(j, 1, m) sequenceRow[i][j] = sequenceRow[i][j-1] + (grid[i][j] == '1');
 	}
 	
-	if (s[0] == s[1]) {
-		res = ""; 
-		res +=s[0];
+	forn(i, m) sequenceColumn[0][i] = (grid[0][i] == '1');
+	forn(i, m){
+		forsn(j, 1, n) sequenceColumn[j][i] = sequenceColumn[j-1][i] + (grid[j][i] == '1');
 	}
 	
-	string reverseS = res;
-	reverse(all(reverseS));
-	res += reverseS;
-	cout << res << "\n";
+	//~ DBG(sequenceRow);
+	//~ DBG(sequenceColumn);
+	
+	bool res = dfs(n-1, m-1, grid, visited, sequenceRow, sequenceColumn);
+	
+	if (res){
+		cout << "YES" << "\n";
+	} else {
+		cout << "NO" << "\n";
+	}
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	int t;
-	cin >> t;
-	
-	forn(_, t){
-		int n;
-		cin >> n;
-		string s;
-		cin >> s;
-		solve(s);
+ 
+    int t;
+    cin >> t;
+    
+    forn(_, t){
+		cin >> n >> m;
+		vector<string> grid(n);
+		forn(i, n) cin >> grid[i];
+		solve(grid);
 	}
 }
