@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -60,41 +60,71 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5000];
-ll A[5000];
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j];
-	if (i > 0) res -= prefixSum[i-1];
-	return res;
-}
+// O(MAX_N log(log(MAX_N)))
 
-ll dp(int i, int j){
-	if (i > j) return 0;
-	
-	if (memo[i][j] == UNDEFINED){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
+const ll COTA_SUP_N = pow(10, 7);
+vector<bool> is_prime(COTA_SUP_N+1, true);
+vector<ll> primes;
+
+void sieveOfEratosthenes(){
+	is_prime[0] = false;
+	is_prime[1] = false;
+	for (ll i = 2; i <= COTA_SUP_N; i++) {
+		if (is_prime[i]) {
+			primes.pb(i);
+			for (ll j = i*i; j <= COTA_SUP_N; j += i)
+				is_prime[j] = false;
+		}
 	}
-	
-	return memo[i][j];
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
 	
-	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = A[0];
-	forsn(i, 1, n) prefixSum[i] = prefixSum[i-1] + A[i];
+	sieveOfEratosthenes();
+	
+    int n;
+    cin >> n;
+    vector<ll> A(n);
+    forn(i, n) cin >> A[i];
+    
+    ll g = 0;
+    forn(i, n) g = __gcd(g, A[i]);
+    forn(i, n) A[i] = A[i]/g;
+    
+    vector<ll> repeticiones(COTA_SUP_N+1, 0);
+    vector<bool> isInB(COTA_SUP_N+1, false);
+    
+	set<ll> B;
+	
 	forn(i, n){
-		forn(j, n) memo[i][j] = UNDEFINED;
+		B.insert(A[i]);
+		repeticiones[A[i]]++;
+		isInB[A[i]] = true;
+	}	
+	
+	string res = "YES";
+	ll maxB = *B.rbegin();
+	
+	for (ll p : primes){
+		if (p > maxB) break;
+		
+		ll r = 0;
+		for (ll j = p; j <= maxB; j += p){
+			if (isInB[j]) r += repeticiones[j];
+			if (r > 1) {
+				res = "NO";
+				break;
+			}
+		}
+			
+		if (r > 1) {
+			res = "NO";
+			break;
+		}
 	}
 	
-	cout << dp(0, n-1) << "\n";
+	cout << res << "\n";
 }

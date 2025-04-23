@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -60,41 +60,63 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5000];
-ll A[5000];
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j];
-	if (i > 0) res -= prefixSum[i-1];
-	return res;
-}
+ll memo[100000][101][2];
+int A[100000];
 
-ll dp(int i, int j){
-	if (i > j) return 0;
+// The biggest consecutive sum which finish at element i, have j times to change the sign and the current sign of elements is k
+ll dp(int i, int j, int k){
+	if (i < 0) return 0;
 	
-	if (memo[i][j] == UNDEFINED){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
+	if (memo[i][j][k] == UNDEFINED){
+		// Si k = 0, entonces voy a sumar A[i]
+		// Si k = 1, entonces voy a sumar -A[i]
+		ll toSum = (ll) A[i];
+		if (k == 1) toSum *= -1;
+		memo[i][j][k] = toSum; // Si el intervalo solo es [A[i]]
+		
+		// Si k = 1, quiere decir que vengo de un cambio de signo. Tengo dos opciones: lo mantengo o lo termino
+		if (k == 1) {
+			memo[i][j][k] = max(memo[i][j][k], toSum + dp(i-1, j, 1));
+			memo[i][j][k] = max(memo[i][j][k], toSum + dp(i-1, j, 0));
+		} else {
+			memo[i][j][k] = max(memo[i][j][k], toSum + dp(i-1, j, 0));
+			// Si j > 0, puedo cambiar el signo
+			if (j > 0) memo[i][j][k] = max(memo[i][j][k], toSum + dp(i-1, j-1, 1));
+		}
 	}
 	
-	return memo[i][j];
+	return memo[i][j][k];
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = A[0];
-	forsn(i, 1, n) prefixSum[i] = prefixSum[i-1] + A[i];
-	forn(i, n){
-		forn(j, n) memo[i][j] = UNDEFINED;
+ 
+    int n, k;
+    cin >> n >> k;
+    
+    //vector<int> A(n);
+    forn(i, n) cin >> A[i];
+    forn(i, n){
+		forn(j, k+1){
+			memo[i][j][0] = UNDEFINED;
+			memo[i][j][1] = UNDEFINED;
+		}
 	}
-	
-	cout << dp(0, n-1) << "\n";
+    
+    //vector<vector<vector<ll>>> memo(n, vector<vector<ll>>(k+1, vector<ll>(2, UNDEFINED)));
+    
+    
+    dp(n-1, k, 0); // Don't Change the sign to the last element
+    dp(n-1, k-1, 1); // Change the sign to the last element
+    
+    ll res = 0;
+    
+    forn(i, n){
+		res = max(res, memo[i][k][0]);
+		res = max(res, memo[i][k-1][1]);
+	}
+    
+    cout << res << "\n";
 }

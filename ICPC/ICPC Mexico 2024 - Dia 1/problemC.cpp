@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -61,40 +61,78 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 int n;
-ll memo[5000][5000];
-ll prefixSum[5000];
-ll A[5000];
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j];
-	if (i > 0) res -= prefixSum[i-1];
-	return res;
-}
-
-ll dp(int i, int j){
-	if (i > j) return 0;
+bool customCompare(pair<int, int> p1, pair<int, int> p2){
+	int minutesp1 = p1.fst*3;
+	int minutesp2 = p2.fst*3;
 	
-	if (memo[i][j] == UNDEFINED){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
+	if (minutesp1 < minutesp2){
+		return true;
+	} else if (minutesp1 > minutesp2){
+		return false;
 	}
 	
-	return memo[i][j];
+	return p1.snd > p2.snd;
+}
+
+int dp(int i, int m, vector<vector<int>> &memo, vector<pair<int, int>> &A){
+	if (m > 480 || i >= n){
+		return 0;
+	}
+	
+	if (memo[i][m] == UNDEFINED){
+		memo[i][m] = 0;
+		pair<int, int> book = A[i];
+		int newTime = m + book.fst*3;
+		if (newTime <= 780){
+			memo[i][m] = book.snd + dp(i+1, newTime, memo, A);
+		}
+	}
+	
+	return memo[i][m];
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = A[0];
-	forsn(i, 1, n) prefixSum[i] = prefixSum[i-1] + A[i];
-	forn(i, n){
-		forn(j, n) memo[i][j] = UNDEFINED;
+ 
+    cin >> n;
+    
+    vector<pair<int, int>> booksPerFame(n);
+    vector<pair<int, int>> booksPerPleasure(n);
+    vector<vector<int>> memoPleasure(n, vector<int>(781, UNDEFINED));
+    vector<vector<int>> memoFame(n, vector<int>(781, UNDEFINED));
+  
+    forn(i, n){
+		int p;
+		cin >> p;
+		booksPerFame[i] = {p, 0};
+		booksPerPleasure[i] = {p, 0};
 	}
 	
-	cout << dp(0, n-1) << "\n";
+	forn(i, n){
+		int p;
+		cin >> p;
+		booksPerPleasure[i].snd = p;
+	}
+	
+	forn(i, n){
+		int f;
+		cin >> f;
+		booksPerFame[i].snd = f;
+	}
+	
+	sort(all(booksPerPleasure), customCompare);
+	sort(all(booksPerFame), customCompare);
+	
+	int maxFame = dp(0, 0, memoFame, booksPerFame);
+	int maxPleasure = dp(0, 0, memoPleasure, booksPerPleasure);
+	
+	if (maxFame == maxPleasure){
+		cout << "EITHER" << "\n";
+	} else if (maxFame < maxPleasure){
+		cout << "PLEASURE" << "\n";
+	} else {
+		cout << "FAME" << "\n";
+	}
 }

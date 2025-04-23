@@ -5,8 +5,8 @@ typedef long long ll;
 typedef long double ld;
 
 const ll UNDEFINED = -1;
-const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+//const int MAX_N = 1e5 + 1;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -23,8 +23,8 @@ const double PI = acos(-1.0);
 #define DBG(x) cerr << #x << " = " << (x) << endl
 #define RAYA cerr << "----------" << endl
 
-#define forn(i,n) for (int i=0;i<(int)(n);i++)
-#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define forn(i,n) for (int i=0;i<(int)(n);++i)
+#define forsn(i,s,n) for (int i=(s);i<(int)(n);++i)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
 #define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
@@ -60,41 +60,62 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5000];
-ll A[5000];
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
+using namespace std;
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j];
-	if (i > 0) res -= prefixSum[i-1];
-	return res;
-}
+// Template definition
+template<typename T>
+using ordered_set = tree<
+    T,                      // Key type
+    null_type,              // Mapped type (use null_type for set)
+    less<T>,                // Comparator
+    rb_tree_tag,            // Underlying tree type
+    tree_order_statistics_node_update>; // Node update
 
-ll dp(int i, int j){
-	if (i > j) return 0;
-	
-	if (memo[i][j] == UNDEFINED){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
-	}
-	
-	return memo[i][j];
-}
 
-int main() {
-    ios :: sync_with_stdio(0);
+const int MAX_N = pow(10, 4);
+int memo[MAX_N][MAX_N];
+int A[MAX_N];
+
+int main() { 
+	ios :: sync_with_stdio(0);
     cin.tie(0);
 	
-	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = A[0];
-	forsn(i, 1, n) prefixSum[i] = prefixSum[i-1] + A[i];
-	forn(i, n){
-		forn(j, n) memo[i][j] = UNDEFINED;
+    int n;
+    scanf("%d", &n);
+    forn(i, n) scanf("%d", &A[i]);
+    
+    forn(i, n){
+		multiset<int> s;
+		s.insert(A[i]);
+		
+		forsn(j, i+1, n){
+			if (j == i+1) memo[i][j-1] = INF;
+			memo[i][j] = memo[i][j-1];
+			auto it = s.insert(A[j]);
+			auto prev = it, next = it;
+			
+			if (it != s.begin()){
+				prev--;
+				memo[i][j] = min(memo[i][j], abs(A[j] - *prev));
+			}
+			
+			next++;
+			if (next != s.end()){
+				memo[i][j] = min(memo[i][j], abs(A[j] - *next));
+			}
+		}
 	}
 	
-	cout << dp(0, n-1) << "\n";
+	int q;
+	scanf("%d", &q);
+	
+	forn(_, q){
+		int l, r;
+		scanf("%d %d", &l, &r);		
+		l--; r--;
+		printf("%d\n", memo[l][r]);
+	}
 }

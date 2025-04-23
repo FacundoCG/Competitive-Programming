@@ -61,40 +61,71 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 int n;
-ll memo[5000][5000];
-ll prefixSum[5000];
-ll A[5000];
+ll S;
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j];
-	if (i > 0) res -= prefixSum[i-1];
-	return res;
+const ll MAX_SUM = 500*(501)/2;
+ll memo[501][MAX_SUM+1];
+
+ll addMod(ll a, ll b, ll m){
+    ll res = ((a % m) + (b % m)) % m;
+    return res;
+}
+ 
+ll mulMod(ll a, ll b, ll m){
+    ll res = ((a % m) * (b % m)) % m;
+    return res;
+}
+ 
+ll binPowMod(ll base, ll exp, ll m){
+    if (exp == 0) return 1;
+    
+    ll a = binPowMod(base, exp/2, m);
+    ll res = mulMod(a, a, m);
+    
+    if (exp % 2 == 1) res = mulMod(res, base, m);
+    return res;
+}
+ 
+ll divideMod(ll a, ll b, ll m){
+    ll res = mulMod(a % m, binPowMod(b, m-2, m) % m, m) % m;
+    return res;
 }
 
-ll dp(int i, int j){
-	if (i > j) return 0;
+ll dp(int i, int t){
+	if (t == S/2) return 1;
+	if (i == 0 || t > S/2) return 0;
 	
-	if (memo[i][j] == UNDEFINED){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
+	if (memo[i][t] == UNDEFINED){
+		memo[i][t] = dp(i-1, t);
+		memo[i][t] = addMod(memo[i][t], dp(i-1, t + i), MOD);
 	}
 	
-	return memo[i][j];
+	return memo[i][t];
 }
+
+// Sea A la cantidad de conjuntos que suman S/2
+// Vos queres calcular (A/2) % MOD
+// Ahora mismo vos estas calculando: A % MOD / 2 que no es equivalente
+// Tenes que hacer : (A % MOD) * (Inverso Multiplicativo de 2 % MOD);
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
 	
 	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = A[0];
-	forsn(i, 1, n) prefixSum[i] = prefixSum[i-1] + A[i];
-	forn(i, n){
-		forn(j, n) memo[i][j] = UNDEFINED;
+	S = (n+1)*n/2;
+	
+	if (S % 2 != 0){
+		cout << 0 << "\n";
+		return 0;
 	}
 	
-	cout << dp(0, n-1) << "\n";
+	forn(i, n+1){
+		forn(j, S+1) memo[i][j] = UNDEFINED;
+	}
+	
+	ll m = dp(n, 0);
+	ll res = divideMod(m, 2, MOD);
+	
+	cout << res << "\n";
 }

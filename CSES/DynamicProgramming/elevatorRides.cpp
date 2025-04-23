@@ -5,7 +5,7 @@ typedef long long ll;
 typedef long double ld;
 
 const ll UNDEFINED = -1;
-const int MAX_N = 1e5 + 1;
+//const int MAX_N = 1e5 + 1;
 const ll MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
@@ -60,41 +60,44 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5000];
-ll A[5000];
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j];
-	if (i > 0) res -= prefixSum[i-1];
-	return res;
-}
+//map<int, map<int, map<int, map<int, int>>>> memo;
+map<tuple<int, int, int, int>, int> memo;
 
-ll dp(int i, int j){
-	if (i > j) return 0;
+int A[20];
+int n, x;
+
+int dp(int i, int j, int used, int w){
+	if (used == 0) return 0; // If I have used all the people, I finish the iteration
+	if (i == -1 && used != 0) return INF; // If I don't have more elevators and I didn't use all the people this is an invalid scenario
+	if (j == -1) return dp(i-1, n-1, used, 0); // If I don't have more people for this elevator, I move to the next one with a weight of zero
 	
-	if (memo[i][j] == UNDEFINED){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
+	if (memo.count({i, j, used, w}) == 0){
+		int res1 = dp(i, j-1, used, w);
+		int res2 = INF;
+		
+		//~ memo[{i, j, used, w}] = dp(i, j-1, used, w); // I don't use this person for this elevator
+		//~ int p = 1 << j;		
+		//~ if ((p & used) && w + A[j] <= x){
+			//~ memo[{i, j, used, w}] = min(memo[{i, j, used, w}], 1 + dp(i, j-1, used & ~p, w + A[j]));
+		//~ }
+		
+		int p = 1 << j;		
+		if ((p & used) && w + A[j] <= x) res2 = 1 + dp(i, j-1, used & ~p, w + A[j]);
+		memo[{i, j, used, w}] = min(res1, res2);
 	}
 	
-	return memo[i][j];
+	return memo[{i, j, used, w}];
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
 	
-	cin >> n;
+	cin >> n >> x;
 	forn(i, n) cin >> A[i];
-	prefixSum[0] = A[0];
-	forsn(i, 1, n) prefixSum[i] = prefixSum[i-1] + A[i];
-	forn(i, n){
-		forn(j, n) memo[i][j] = UNDEFINED;
-	}
-	
-	cout << dp(0, n-1) << "\n";
+	int allUsed = 1 << n;
+	allUsed -= 1;
+	DBG(n); DBG(allUsed); DBG(x);
+	cout << dp(n-1, n-1, allUsed, 0) << "\n"; // I start in the elevator n-1-th with the person n-1 and a current weight of 0 
 }

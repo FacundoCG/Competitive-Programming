@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -61,40 +61,90 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 int n;
-ll memo[5000][5000];
-ll prefixSum[5000];
-ll A[5000];
+string s;
+vector<int> prefixSum;
+int memo[10000][10000];
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j];
-	if (i > 0) res -= prefixSum[i-1];
+int addMod(int a, int b, int m){
+    int res = ((a % m) + (b % m)) % m;
+    return res;
+}
+
+int eaten(int start, int end){
+	if (start < 0 || end > n || start > end) return 0;
+	
+	int res = prefixSum[end];
+	if (start != 0) res -= prefixSum[start-1];
 	return res;
 }
 
-ll dp(int i, int j){
-	if (i > j) return 0;
-	
-	if (memo[i][j] == UNDEFINED){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
+int dp(int i, int j){
+	if (i > j){
+		return 0;
 	}
 	
-	return memo[i][j];
+	if (memo[i][j] == UNDEFINED){
+		memo[i][j] = 0;
+		// Chequeo de [0, ..., i-1] y [j+1, ..., n-1] cuantas deer cokies comí (b)
+		// m = i + [n-1 - (j+1) + 1] eran las cookies comidas
+		// humanCookies = m - b
+				
+		int cookiesEaten = i + (n-j-1);
+		int deerCookiesEaten = eaten(0, i-1) + eaten(j+1, n-1);
+		int humanCookiesEaten = cookiesEaten - deerCookiesEaten;
+		
+		if (s[i] == '0' && humanCookiesEaten + 1 <= deerCookiesEaten){
+			if (i == j){
+				memo[i][j] = 1;
+			} else {
+				memo[i][j] = addMod(memo[i][j], dp(i+1, j), MOD);
+			}
+		}
+		
+		if (s[j] == '0' && humanCookiesEaten + 1 <= deerCookiesEaten){
+			if (i == j){
+				memo[i][j] = 1;
+			} else {
+				memo[i][j] = addMod(memo[i][j], dp(i, j-1), MOD);
+			}
+		}
+		
+		if (s[i] == '1'){
+			if (i == j){
+				memo[i][j] = 1;
+			} else {
+				memo[i][j] = addMod(memo[i][j], dp(i+1, j), MOD);
+			}
+		}
+		
+		if (s[j] == '1'){
+			if (i == j){
+				memo[i][j] = 1;
+			} else {
+				memo[i][j] = addMod(memo[i][j], dp(i, j-1), MOD);
+			}
+		}
+	}
+	
+	return memo[i][j] % MOD;
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = A[0];
-	forsn(i, 1, n) prefixSum[i] = prefixSum[i-1] + A[i];
-	forn(i, n){
-		forn(j, n) memo[i][j] = UNDEFINED;
+ 
+    cin >> n;
+    cin >> s;
+    prefixSum.resize(n, 0);
+    prefixSum[0] = (s[0] == '1');
+    forsn(i, 1, n) prefixSum[i] = prefixSum[i-1] + (s[i] == '1');
+    
+    forn(i, 10000){
+		forn(j, 10000) memo[i][j] = UNDEFINED;
 	}
-	
-	cout << dp(0, n-1) << "\n";
+    
+    int res = dp(0, n-1);
+    if (res != 0) res = addMod(res,1, MOD);
+  
+    cout << res << "\n";
 }

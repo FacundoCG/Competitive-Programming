@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -60,41 +60,85 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5000];
-ll A[5000];
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j];
-	if (i > 0) res -= prefixSum[i-1];
-	return res;
+// Calcular extremo derecho que cumple P(X)
+int rightBinarySearch(int start, int end, vector<string> &A, string &s){
+    int l = start - 1;
+    int r = end + 1;
+
+    while (r - l > 1){
+        int mid = (l + r)/2;
+
+        if (A[mid] < s){
+            l = mid;
+        } else {
+            r = mid;
+        }
+    }
+    
+    if (l < start || l > end || !(A[l] < s)){
+		l = -1; // Si l no está en el intervalo [start,end] o no cumple la propiedad, entonces retorno -1
+	}
+
+    return l+1; // l es el ultimo elemento que cumple P(X)
 }
 
-ll dp(int i, int j){
-	if (i > j) return 0;
-	
-	if (memo[i][j] == UNDEFINED){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
+int rightBinarySearch1(int start, int end, vector<string> &A, string &s){
+    int l = start - 1;
+    int r = end + 1;
+
+    while (r - l > 1){
+        int mid = (l + r)/2;
+
+        if (A[mid] <= s){
+            l = mid;
+        } else {
+            r = mid;
+        }
+    }
+    
+    if (l < start || l > end || !(A[l] <= s)){
+		l = -1; // Si l no está en el intervalo [start,end] o no cumple la propiedad, entonces retorno -1
 	}
-	
-	return memo[i][j];
+
+    return l+1; // l es el ultimo elemento que cumple P(X)
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = A[0];
-	forsn(i, 1, n) prefixSum[i] = prefixSum[i-1] + A[i];
-	forn(i, n){
-		forn(j, n) memo[i][j] = UNDEFINED;
+ 
+    int n;
+    cin >> n;
+    
+    vector<string> A(n);
+    map<string, vector<string>> M;
+    map<string, int> repetitions;
+    
+    forn(i, n) cin >> A[i];
+    forn(i, n){
+		repetitions[A[i]]++;
+		string B = A[i];
+		sort(all(B));
+		M[B].pb(A[i]);
 	}
 	
-	cout << dp(0, n-1) << "\n";
+	forn(i, n) sort(all(A[i]));
+	sort(all(A));
+	
+	for (auto &p : M) sort(all(p.snd));
+	
+	int q;
+	cin >> q;
+	
+	forn(i, q){
+		string s;
+		cin >> s;
+		
+		string t = s;
+		sort(all(t));
+		ll res = rightBinarySearch(0, n-1, A, t); // I calculate how many words a satisfy f(a) < f(s)
+		res += rightBinarySearch1(0, SIZE(M[t])-1, M[t], s); // I calculate for the words: f(a) = f(s)
+		cout << res << "\n";
+	}
 }
