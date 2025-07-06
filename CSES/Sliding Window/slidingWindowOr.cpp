@@ -61,33 +61,16 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
-	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
-		}
-		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
-	}
-	
-	cout << res << "\n";
+int addMod(int a, int b, int m = MOD){
+    int res = ((a % m) + (b % m)) % m;
+    return res;
+}
+ 
+int mulMod(int a, int b, int m = MOD){
+	ll resLL = (ll) (a % m) * (b % m);
+	resLL %= m;
+	int res = (int) resLL;
+    return res;
 }
 
 int main()
@@ -95,14 +78,54 @@ int main()
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	int n, k;
+	cin >> n >> k;
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
-	}
+	vector<int> A(n);
+	//~ vector<vector<int>> B(n, vector<int>(32, 0));
+	vector<int> currentRes(32, 0);
+
+	int x, a, b, c;
+	cin >> x >> a >> b >> c;
 	
+	int j, v;
+	//~ ll asd = (ll) 1 << 31;
+	//~ DBG(asd);
+	
+	//~ forn(i, n){
+		//~ if (i == 0) A[0] = x;
+		//~ else A[i] = addMod(mulMod(a, A[i-1], c), b, c);
+		
+		//~ v = A[i], j = 0;
+		//~ while (v > 0){
+			//~ if (v & 1) B[i][j] = 1;
+			//~ if (i < k) currentRes[j] += B[i][j];
+			//~ v /= 2; j++;
+		//~ }
+	//~ }
+		
+	//~ ll currentOr = 0;
+	//~ forn(i, 32) {
+		//~ if (currentRes[i]) {
+			//~ ll toAdd = (ll) 1 << i;
+			//~ currentOr = currentOr | toAdd;
+		//~ }
+	//~ }
+	
+	//~ ll res = currentOr;
+	
+	//~ forsn(i, k, n){
+		//~ currentOr = 0;
+		//~ forn(h, 32) {
+			//~ currentRes[h] = currentRes[h] - B[i-k][h] + B[i][h];
+			//~ ll toAdd = (ll) 1 << h;
+			//~ if (currentRes[h]) currentOr = currentOr | toAdd;
+		//~ }
+
+		//~ res ^= currentOr;
+	//~ }
+	
+	//~ cout << res << "\n";
+	cout << n << "\n";
     return 0;
 }

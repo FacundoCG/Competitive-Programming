@@ -65,24 +65,51 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-vector<int> levelOfNode;
+struct BinaryJumping{
+	// Estructura para grafos de sucesores.
+	vector<vector<int>> binaryJumping;
+	int logk;
+	
+	// Inicializacion en tiempo O(n*log(max_k))
+	BinaryJumping(vector<int> &succ, int max_k){
+		logk = (int) log2(max_k);  // Piso.
+		binaryJumping.assign(SIZE(succ), vector<int>(logk+1, UNDEFINED));
+		
+		for(int i=0; i<SIZE(succ); i++){
+			binaryJumping[i][0] = succ[i];
+		}
+		
+		for(int it=1; it<=logk; it++){
+			for(int i=0; i<SIZE(succ); i++){
+				if (binaryJumping[i][it-1] != UNDEFINED) binaryJumping[i][it] = binaryJumping[binaryJumping[i][it-1]][it-1];
+			}
+		}
+	}
+	
+	// O(log(k)). Donde x es el nodo, k es la distancia de salto.
+	int succ_k(int x, int k){
+		// Suponemos que k >= 0
 
-int rightBinarySearch(int start, int end, int currentNode, int desiredLevel, vector<vector<int>> &memoAncestors){
-    int l = start - 1;
-    int r = end + 1;
-    
-    while (r - l > 1){
-        int mid = (l + r)/2;
-        int nodeToJump = memoAncestors[currentNode][mid];
- 
-        if (nodeToJump != UNDEFINED && levelOfNode[nodeToJump] >= desiredLevel){
-            l = mid;
-        } else {
-            r = mid;
-        }
-    }
- 
-    return l; // l es el ultimo elemento que cumple P(X)
+		int it = 0;
+		while(k != 0){
+			if ((k & 1) == 1){
+				if (x != UNDEFINED) x = binaryJumping[x][it];
+			}
+			k = k >> 1;
+			it++;
+		}
+		
+		return x; // x = UNDEFINED significa que te excediste con los saltos
+	}
+	
+};
+
+vector<int> distanceFromRoot;
+vector<vector<int>> adjList;
+
+void calculateDistanceFromRoot(int v, int currentDepth){
+	distanceFromRoot[v] = currentDepth;
+	for (int u : adjList[v]) calculateDistanceFromRoot(u, currentDepth+1);
 }
 
 int rightBinarySearchForLCA(int start, int end, int v, int w, vector<vector<int>> &memoAncestors){
@@ -104,87 +131,22 @@ int rightBinarySearchForLCA(int start, int end, int v, int w, vector<vector<int>
     return l; // l es el ultimo elemento que cumple P(X)
 }
 
-int findTheAncestorFor(int v, int numberOfJumps, vector<vector<int>> &memoAncestors){
-    int currentLevel = levelOfNode[v];
-    int levelToFind = currentLevel - numberOfJumps;
-    int currentNode = v;
-    int k = memoAncestors[0].size();
-    
-    while (currentLevel != levelToFind){
-        int bestNewLevel = rightBinarySearch(0, k-1, currentNode, levelToFind, memoAncestors);
-        currentNode = memoAncestors[currentNode][bestNewLevel];
-        currentLevel = levelOfNode[currentNode];
-    }
- 
-    return currentNode;
-}
+int findLCA(int v, int w, BinaryJumping &G){
+	int jumps = abs(distanceFromRoot[v] - distanceFromRoot[w]);
+    if (distanceFromRoot[v] < distanceFromRoot[w]) w = G.succ_k(w, jumps);
+    else v = G.succ_k(v, jumps);
 
-int findTheLCA(int v, int w, vector<vector<int>> &memoAncestors){
-    int jumps = abs(levelOfNode[v] - levelOfNode[w]);
+    if (v == w) return v;
+    int m = G.logk;
 
-    if (levelOfNode[v] < levelOfNode[w]){
-        w = findTheAncestorFor(w, jumps, memoAncestors);
-    } else if (levelOfNode[v] > levelOfNode[w]){
-        v = findTheAncestorFor(v, jumps, memoAncestors);
+    while (G.binaryJumping[v][0] != G.binaryJumping[w][0]){
+        int bestNewLevel = rightBinarySearchForLCA(0, m-1, v, w, G.binaryJumping);
+        v = G.binaryJumping[v][bestNewLevel];
+        w = G.binaryJumping[w][bestNewLevel];
     }
 
-    if (v == w){
-        return v;
-    }
-
-    int k = memoAncestors[0].size();
-
-    while (memoAncestors[v][0] != memoAncestors[w][0]){
-        int bestNewLevel = rightBinarySearchForLCA(0, k-1, v, w, memoAncestors);
-        v = memoAncestors[v][bestNewLevel];
-        w = memoAncestors[w][bestNewLevel];
-    }
-
-    int lca = memoAncestors[v][0];
-
+    int lca = G.binaryJumping[v][0];
     return lca;
-}
-
-void calculateParents(int v, vector<vector<int>> &adjList, vector<bool> &visited, vector<vector<int>> &memoAncestors, int currentDepth){
-    visited[v] = true;
-    levelOfNode[v] = currentDepth;
-
-    for (int u : adjList[v]){
-        if (!visited[u]){
-            memoAncestors[u][0] = v;
-            calculateParents(u, adjList, visited, memoAncestors, currentDepth+1);
-        }
-    }
-}
-
-void precomputeAncestors(vector<vector<int>> &adjList, vector<vector<int>> &memoAncestors){
-    vector<bool> visited(adjList.size(), false);
-    calculateParents(0, adjList, visited, memoAncestors, 0);
-    int k = log2(adjList.size())+1;
-
-    forn(i, adjList.size()) visited[i] = false;
-    visited[0] = true;
-
-    queue<int> toVisit;
-    toVisit.push(0);
-
-    while (!toVisit.empty()){
-        int v = toVisit.front();
-        toVisit.pop();
-
-        for (int u : adjList[v]){
-            if (!visited[u]){
-                toVisit.push(u);
-                visited[u] = true;
-
-                forsn(i, 1, k){
-                    if (memoAncestors[u][i-1] != UNDEFINED){
-                        memoAncestors[u][i] = memoAncestors[memoAncestors[u][i-1]][i-1];
-                    }
-                }
-            }
-        }
-    }
 }
 
 int main() {
@@ -193,30 +155,27 @@ int main() {
  
     int n, q;
     cin >> n >> q;
-
-    int k = log2(n) + 1;
-
-    vector<vector<int>> adjList(n);
-    vector<vector<int>> memoAncestors(n, vector<int>(k, UNDEFINED));
-    levelOfNode.resize(n);
-
-    forn(i, n-1){
+	
+	vector<int> parent(n, UNDEFINED);
+	adjList.resize(n);
+	
+    forsn(i, 1, n){
         int v;
         cin >> v;
         v--;
-
-        adjList[v].pb(i+1);
-        adjList[i+1].pb(v);
+		parent[i] = v;
+		adjList[v].pb(i);
     }
     
-    precomputeAncestors(adjList, memoAncestors); 
-
+    BinaryJumping G(parent, n);
+	distanceFromRoot.resize(n, 0);
+	calculateDistanceFromRoot(0, 0);
+	
     forn(_, q){
         int v, w;
         cin >> v >> w;
         v--; w--;
 
-        int lca = findTheLCA(v, w, memoAncestors) + 1;
-        cout << lca << "\n";
+        cout << findLCA(v, w, G)+1 << "\n";
     }
 }

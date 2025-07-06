@@ -3,6 +3,8 @@ using namespace std;
 
 typedef long long ll;
 typedef long double ld;
+using vi = vector<int>;
+using vb = vector<bool>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -27,8 +29,13 @@ const double PI = acos(-1.0);
 #define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
-#define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
-#define dforall(i,c) for(auto i=(c).rbegin(), i != (c).rend(); i--)
+
+// Show pair
+template <typename T1, typename T2>
+ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
+    os << "{" << p.first << "," << p.second << "}";
+    return os;
+}
 
 // Show vector
 template <typename T>
@@ -39,13 +46,6 @@ ostream & operator <<(ostream &os, const vector<T> &v) {
         os << v[i];
     }
     return os << "]";
-}
-
-// Show pair
-template <typename T1, typename T2>
-ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
-    os << "{" << p.first << "," << p.second << "}";
-    return os;
 }
 
 // Show set
@@ -60,42 +60,50 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5001];
-ll A[5000];
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j+1] - prefixSum[i];
-	return res;
+ll addMod(ll a, ll b, ll m = MOD){
+    ll res = ((a % m) + (b % m)) % m;
+    return res;
+}
+ 
+ll mulMod(ll a, ll b, ll m = MOD){
+	ll res = (ll) a*b;
+	res %= m;
+    return res;
+}
+ 
+ll binPowMod(ll base, ll exp, ll m = MOD){
+    if (exp == 0) return 1;
+    
+    ll a = binPowMod(base, exp/2, m);
+    ll res = mulMod(a, a, m);
+    
+    if (exp % 2 == 1) res = mulMod(res, base, m);
+    return res;
 }
 
-ll dp(int i, int j){
-	if (i > j) return 0;
-	
-	if (memo[i][j] == LINF){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
-	}
-	
-	return memo[i][j];
-}
-
-int main() {
-    ios :: sync_with_stdio(0);
+int main()
+{
     cin.tie(0);
+    cin.sync_with_stdio(0);
 	
+	ll n;
 	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = 0;
 	
-	forn(i, n){
-		if (i > 0) prefixSum[i] = prefixSum[i-1] + A[i-1];
-		forn(j, n) memo[i][j] = LINF;
+	vector<ll> A;
+	map<ll, ll> repeticiones;
+	forn(i, n) {
+		ll v;
+		cin >> v;
+		if (repeticiones[v] == 0) A.pb(v);
+		repeticiones[v]++;
 	}
 	
-	prefixSum[n] = prefixSum[n-1] + A[n-1];
-	cout << dp(0, n-1) << "\n";
+	ll res = repeticiones[A[0]] + 1;
+	forsn(i, 1, SIZE(A)) res = mulMod(repeticiones[A[i]] + 1, res, MOD);
+	res -= 1;
+	
+	cout << res << "\n";
+	
+    return 0;
 }

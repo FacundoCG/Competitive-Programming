@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -60,42 +60,54 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5001];
-ll A[5000];
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j+1] - prefixSum[i];
-	return res;
-}
-
-ll dp(int i, int j){
-	if (i > j) return 0;
-	
-	if (memo[i][j] == LINF){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
-	}
-	
-	return memo[i][j];
-}
+template <typename T>
+using ordered_multiset = tree<
+    pair<T, int>,
+    null_type,
+    less<pair<T, int>>, // NOT less_equal
+    rb_tree_tag,
+    tree_order_statistics_node_update
+>;
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = 0;
-	
-	forn(i, n){
-		if (i > 0) prefixSum[i] = prefixSum[i-1] + A[i-1];
-		forn(j, n) memo[i][j] = LINF;
+ 
+    int n, k;
+    cin >> n >> k;
+    
+    vector<int> A(n);
+    forn(i, n) cin >> A[i];
+    ordered_multiset<int> s;
+	ll sum = 0;
+    forn(i, k-1) {
+		s.insert({A[i], i});
+		sum = (ll) sum + A[i];
 	}
 	
-	prefixSum[n] = prefixSum[n-1] + A[n-1];
-	cout << dp(0, n-1) << "\n";
+	int m = k/2;
+	if (k % 2 == 0) m = k/2 - 1;
+	int indexToErase = 0;
+	
+	forsn(i, k-1, n){
+		s.insert({A[i], i});
+		sum = (ll) sum + A[i];
+		auto it = s.find_by_order(m);
+		int median = (*it).fst;
+		
+		// I have to make the k elements equal to media: A[0] + A[1] + ... + A[k-1]
+		// The cost for that is: |median - A[0]| + |median - A[1]| + ... + |median - A[k-1]|
+		
+		
+		auto et = s.lower_bound({A[indexToErase], indexToErase});
+		s.erase(et);
+		indexToErase++;
+	}
+	
+	cout << "\n";
+	
 }

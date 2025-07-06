@@ -5,9 +5,10 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
-const int MAX_N = 1e5 + 1;
+const int MAX_N = 3000;
 const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
@@ -61,33 +62,44 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
+string A[3000];
+char path[6000];
+map<int, int> memo[6000];
+
+// int memo[3000][3000];
+int n;
+
+int dp(int i, int j, int currentDepth){
+	if (i == n-1 && j == n-1) return 0;
+	int index = i*n + j;
 	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
+	if (!esta(index, memo[currentDepth])){
+		if (i+1 < n && j+1 < n){
+			char c = min(A[i][j+1], A[i+1][j]);
+			if (c > path[currentDepth]) return 0;
+			path[currentDepth] = c;
+			
+			if (A[i][j+1] < A[i+1][j]){
+				memo[currentDepth][index] = dp(i, j+1, currentDepth+1);
+			} else if (A[i+1][j] < A[i][j+1]){
+				memo[currentDepth][index] = dp(i+1, j, currentDepth+1);
+			} else {
+				memo[currentDepth][index] = min(dp(i+1, j, currentDepth+1), dp(i, j+1, currentDepth+1));
+			}
+		} else if (i+1 < n){
+			char c = A[i+1][j];
+			if (c > path[currentDepth]) return 0;
+			path[currentDepth] = c;
+			memo[currentDepth][index] = dp(i+1, j, currentDepth+1);
 		} else {
-			res = (ll) middlePoint - c;
-		}
-		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
+			char c = A[i][j+1];
+			if (c > path[currentDepth]) return 0;
+			path[currentDepth] = c;
+			memo[currentDepth][index] = dp(i, j+1, currentDepth+1);
 		}
 	}
 	
-	cout << res << "\n";
+	return memo[currentDepth][index];
 }
 
 int main()
@@ -95,14 +107,16 @@ int main()
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	// Camino de longitud 2*(n-1)
+	cin >> n;
+	forn(i, 2*(n-1)) path[i] = 'Z';
+	forn(i, n) cin >> A[i];
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
-	}
+	path[0] = A[0][0];
+	dp(0, 0, 1);
+	
+	forn(i, 2*(n-1)) cout << path[i];
+	cout << "\n";
 	
     return 0;
 }

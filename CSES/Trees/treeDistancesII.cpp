@@ -58,7 +58,7 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 // ############################################################### //
 vector<vector<int>> adjList;
 vector<bool> visited;
-vector<int> numberOfDescendants;
+vector<int> subtreeSize;
 int n;
 
 ll totalDistances(int v, int currentDepth){
@@ -66,10 +66,7 @@ ll totalDistances(int v, int currentDepth){
     ll res = 0;
 
     for (int u : adjList[v]){
-        if (!visited[u]){
-            res += (ll) currentDepth;
-            res += (ll) totalDistances(u, currentDepth+1);
-        }
+        if (!visited[u]) res += currentDepth + totalDistances(u, currentDepth+1);
     }
 
     return res;
@@ -77,11 +74,12 @@ ll totalDistances(int v, int currentDepth){
 
 void calculateNumberOfDescendants(int v){
     visited[v] = true;
-
+	subtreeSize[v] = 1;
+	
     for (int u : adjList[v]){
         if (!visited[u]){
             calculateNumberOfDescendants(u);
-            numberOfDescendants[v] += 1 + numberOfDescendants[u];
+            subtreeSize[v] += subtreeSize[u];
         }
     }
 }
@@ -90,11 +88,8 @@ void solve(int v, int parent, vector<ll> &res){
     visited[v] = true;
 
     if (v != 0){
-        //DBG(v);
-        //DBG(numberOfDescendants[v]);
-        ll nodesThatIAmFarNow = (ll) n - numberOfDescendants[v] - 2;
-        //DBG(nodesThatIAmFarNow);
-        res[v] = (ll) res[parent] - numberOfDescendants[v] + nodesThatIAmFarNow; 
+        ll nodesThatIAmFarNow = (ll) n - subtreeSize[v];
+        res[v] = (ll) res[parent] - subtreeSize[v] + nodesThatIAmFarNow; 
     }
 
     for (int u : adjList[v]){
@@ -113,7 +108,7 @@ int main() {
 
     adjList.resize(n);
     visited.resize(n);
-    numberOfDescendants.resize(n);
+    subtreeSize.resize(n);
     vector<ll> res(n);
 
     forn(i,n-1){
@@ -127,8 +122,7 @@ int main() {
     }
 
     res[0] = totalDistances(0, 1); // The sum of all the distances from 0 to the rest of the vertices
-
-    forn(i, n) visited[i] = false;
+	visited.assign(n, false);
     calculateNumberOfDescendants(0);
 
     forn(i, n) visited[i] = false;

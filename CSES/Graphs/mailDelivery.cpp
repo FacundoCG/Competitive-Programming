@@ -3,6 +3,8 @@ using namespace std;
 
 typedef long long ll;
 typedef long double ld;
+using vi = vector<int>;
+using vb = vector<bool>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -27,8 +29,13 @@ const double PI = acos(-1.0);
 #define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
-#define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
-#define dforall(i,c) for(auto i=(c).rbegin(), i != (c).rend(); i--)
+
+// Show pair
+template <typename T1, typename T2>
+ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
+    os << "{" << p.first << "," << p.second << "}";
+    return os;
+}
 
 // Show vector
 template <typename T>
@@ -39,13 +46,6 @@ ostream & operator <<(ostream &os, const vector<T> &v) {
         os << v[i];
     }
     return os << "]";
-}
-
-// Show pair
-template <typename T1, typename T2>
-ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
-    os << "{" << p.first << "," << p.second << "}";
-    return os;
 }
 
 // Show set
@@ -59,16 +59,54 @@ ostream & operator <<(ostream &os, const set<T> &s) {
     return os << "}";
 }
 
-
-// Rango de int: -2*10^9 <= x <= 2*10^9
-// Rango de long long: -9*10^18 <= x <= 9*10^18
-
 // ############################################################### //
 
-int main() {
-    ios :: sync_with_stdio(0);
+struct Graph {
+	vector<vi> adjList;
+	vb visited;
+	vi parent;
+	int m;
+	bool existsCycleFromOne;
+	
+	Graph(int size): m(size){
+        adjList.resize(m);
+        visited.resize(m, false);
+        parent.resize(m, UNDEFINED);
+        existsCycleFromOne = false;
+    }
+
+    void addEdge(int u, int v){
+        adjList[u].pb(v);
+        adjList[v].pb(u);
+    }
+    
+    void dfs(int v){
+		visited[v] = true;
+		
+		for (int u : adjList[v]){
+			
+		}
+	}
+};
+
+int main()
+{
     cin.tie(0);
- 
-    ll n;
-    cin >> n;
+    cin.sync_with_stdio(0);
+	
+	int n, m;
+	cin >> n >> m;
+	
+	Graph G(n);
+	forn(_, m){
+		int a, b;
+		cin >> a >> b;
+		a--; b--;
+		G.addEdge(a, b);
+	}
+	
+	
+	
+		
+    return 0;
 }

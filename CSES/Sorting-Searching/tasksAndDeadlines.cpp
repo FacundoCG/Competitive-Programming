@@ -3,10 +3,13 @@ using namespace std;
 
 typedef long long ll;
 typedef long double ld;
+using vi = vector<int>;
+using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -27,8 +30,13 @@ const double PI = acos(-1.0);
 #define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
-#define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
-#define dforall(i,c) for(auto i=(c).rbegin(), i != (c).rend(); i--)
+
+// Show pair
+template <typename T1, typename T2>
+ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
+    os << "{" << p.first << "," << p.second << "}";
+    return os;
+}
 
 // Show vector
 template <typename T>
@@ -39,13 +47,6 @@ ostream & operator <<(ostream &os, const vector<T> &v) {
         os << v[i];
     }
     return os << "]";
-}
-
-// Show pair
-template <typename T1, typename T2>
-ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
-    os << "{" << p.first << "," << p.second << "}";
-    return os;
 }
 
 // Show set
@@ -60,42 +61,33 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5001];
-ll A[5000];
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j+1] - prefixSum[i];
-	return res;
-}
-
-ll dp(int i, int j){
-	if (i > j) return 0;
+int main()
+{
+    cin.tie(0);
+    cin.sync_with_stdio(0);
 	
-	if (memo[i][j] == LINF){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
+	int n;
+	cin >> n;
+	
+	vector<pair<ll, ll>> A(n);
+	forn(i, n){
+		ll t, d;
+		cin >> t >> d;
+		A[i] = {t, d};
 	}
 	
-	return memo[i][j];
-}
-
-int main() {
-    ios :: sync_with_stdio(0);
-    cin.tie(0);
+	sort(all(A));
 	
-	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = 0;
+	ll res = 0;
+	ll lastTime = 0;
 	
 	forn(i, n){
-		if (i > 0) prefixSum[i] = prefixSum[i-1] + A[i-1];
-		forn(j, n) memo[i][j] = LINF;
+		res += A[i].snd - A[i].fst - lastTime;
+		lastTime += A[i].fst; 
 	}
 	
-	prefixSum[n] = prefixSum[n-1] + A[n-1];
-	cout << dp(0, n-1) << "\n";
+	cout << res << "\n";
+	
+    return 0;
 }

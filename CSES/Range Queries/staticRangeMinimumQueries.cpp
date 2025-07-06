@@ -4,6 +4,7 @@ using namespace std;
 typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
+using vl = vector<ll>;
 using vb = vector<bool>;
 
 const ll UNDEFINED = -1;
@@ -61,47 +62,77 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
-	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
-		}
-		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
+struct SqrtDescomposition{
+    vl A;
+    vector<vl> descompositionOfA;
+    vl minOfDescomposition;
+    int n, sqrtOfN;
+
+    SqrtDescomposition(vl &arr) : A(arr){
+        n = SIZE(arr);
+        sqrtOfN = (int) sqrt(n) + 1;
+        descompositionOfA.resize(sqrtOfN);
+        minOfDescomposition.resize(sqrtOfN, INF);
+
+        forn(i, n) descompositionOfA[i/sqrtOfN].pb(A[i]);
+        
+        forn(i, sqrtOfN){
+            forn(j, SIZE(descompositionOfA[i])) minOfDescomposition[i] = min(minOfDescomposition[i], descompositionOfA[i][j]);
+        }
+    }
+    
+    int findBlock(int index){
+		return index/sqrtOfN;
 	}
 	
-	cout << res << "\n";
-}
+	int findIndexInTheBlock(int index){
+		return index % sqrtOfN;
+	}
+    
+    void answerQuery(int l, int r){
+		int blockOfL = findBlock(l), blockOfR = findBlock(r);
+		int indexOfL = findIndexInTheBlock(l), indexOfR = findIndexInTheBlock(r);
+		ll res = INF;
+		
+		if (blockOfL == blockOfR){
+			forsn(i, indexOfL, indexOfR+1) res = min(res, descompositionOfA[blockOfL][i]);
+		} else {
+			forsn(i, indexOfL, SIZE(descompositionOfA[blockOfL])) res = min(res, descompositionOfA[blockOfL][i]);
+			forn(i, indexOfR+1) res = min(res, descompositionOfA[blockOfR][i]);
+			forsn(i, blockOfL+1, blockOfR) res = min(res, minOfDescomposition[i]);
+		}
+		
+		
+		cout << res << "\n";
+	}
+	
+	void updateAt(int l, ll v){
+		int blockOfL = findBlock(l);
+	}
+};
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	int n, q;
+	cin >> n >> q;
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	vl A(n);
+	forn(i, n) cin >> A[i];
+	SqrtDescomposition S(A);
+	
+	forn(_, q){
+		int k, l, r;
+		cin >> k >> l >> r;
+		l--;
+		
+		if (k == 1) S.updateAt(l, r);
+		else {
+			r--; 
+			S.answerQuery(l, r);
+		}
 	}
 	
     return 0;

@@ -1,95 +1,158 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const long long UNDEFINED = -1;
-typedef pair<int, int> edge;
+typedef long long ll;
+typedef long double ld;
 
-pair<bool, edge> hasCycle(int v, vector<vector<int>> &adjList, vector<bool> &visited, vector<int> &parents){
-    //cout << "Current v: " << v << endl;
-    visited[v] = true;
-    edge e = {UNDEFINED, UNDEFINED};
-    pair<bool, edge> res = {false, e};
+const ll UNDEFINED = -1;
+const int MAX_N = 1e5 + 1;
+const int MOD = 1e9 + 7;
+const int INF = 1e9;
+const ll LINF = 1e18;
+const ll zero = 0;
+const ld EPSILON = 1e-10;
+const double PI = acos(-1.0);
 
-    for (int i = 0; i < adjList[v].size(); i++){
-        int w = adjList[v][i];
-        if (!visited[w]){
-            parents[w] = v;
-            res = hasCycle(w, adjList, visited, parents);
-            if (res.first){
-                break;
-            }
-        } else if (visited[w] && parents[v] != w && parents[v] != UNDEFINED){
-            //cout << "Success" << endl;
-            //cout << "Backedge: {" << v << "," << w << "}" << endl;
-            edge backEdge = {w,v};
-            return {true, backEdge};
-        }
+#define pb push_back
+#define fst first
+#define snd second
+#define esta(x,c) ((c).find(x) != (c).end())  // Devuelve true si x es un elemento de c.
+#define all(c) (c).begin(),(c).end()
+#define SIZE(c) int((c).size())
+
+#define DBG(x) cerr << #x << " = " << (x) << endl
+#define RAYA cerr << "----------" << endl
+
+#define forn(i,n) for (int i=0;i<(int)(n);i++)
+#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
+#define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
+#define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
+#define dforall(i,c) for(auto i=(c).rbegin(), i != (c).rend(); i--)
+
+// Show pair
+template <typename T1, typename T2>
+ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
+    os << "{" << p.first << "," << p.second << "}";
+    return os;
+}
+
+// Show vector
+template <typename T>
+ostream & operator <<(ostream &os, const vector<T> &v) {
+    os << "[";
+    forn(i, v.size()) {
+        if (i > 0) os << ",";
+        os << v[i];
+    }
+    return os << "]";
+}
+
+// Show set
+template <typename T>
+ostream & operator <<(ostream &os, const set<T> &s) {
+    os << "{";
+    for(auto it = s.begin(); it != s.end(); it++){
+        if(it != s.begin()) os << ",";
+        os << *it;
+    }
+    return os << "}";
+}
+
+// ############################################################### //
+
+struct Graph {
+    int m;
+    vector<bool> visited;
+    vector<vector<int>> adjList;
+    vector<int> parent;
+	int cycle_start, cycle_end;
+
+    Graph(int size): m(size){
+        adjList.resize(m);
+        visited.resize(m, false);
+        parent.resize(m, UNDEFINED);
     }
 
-    return res;
-}
+    void addEdge(int u, int v){
+        adjList[u].pb(v);
+        adjList[v].pb(u);
+    }
+    
+    void defineParentFrom(int v){
+		visited[v] = true;
+		for (int u : adjList[v]){
+			if (!visited[u]){
+				parent[u] = v;
+				defineParentFrom(u);
+			}
+		}
+	}
+    
+    void defineParents(){
+		forn(i, m){
+			if (!visited[i]) defineParentFrom(i);
+		}
+		
+		visited.assign(m, false);
+	}
+    
+    
+    bool findCycle(int v){
+		visited[v] = true;
+		for (int u : adjList[v]){
+			if (u == parent[v]) continue; 
+			if (visited[u]) {
+				cycle_end = v;
+				cycle_start = u;
+				return true;
+			}
+			
+			if (findCycle(u)) return true;
+		}
+
+		return false;
+	}
+};
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-
-    int n,m;
+ 
+    int n, m;
     cin >> n >> m;
-
-    vector<vector<int>> adjList(n);
-    vector<bool> visited(n, false);
-    vector<int> parents(n, UNDEFINED);
-
-    for (int i = 0; i < m; i++){
-        int v, w;
-        cin >> v >> w;
-
-        v-=1;
-        w-=1;
-
-        adjList[v].push_back(w);
-        adjList[w].push_back(v);
-    }
-
-    pair<bool, edge> hasCycles;
-    edge e;
-
-    for (int i = 0; i < n; i++){
-        if (!visited[i]){
-            hasCycles = hasCycle(i, adjList, visited, parents);
-            if (hasCycles.first){
-                e = hasCycles.second;
-                break;
-            }
-        }
-    } 
-
-    if (!hasCycles.first){
-        cout << "IMPOSSIBLE" << "\n";
-        return 0;
-    }
-
-    //cout << "The back edge is: {" << e.first << "," << e.second << "}" << endl;
-
-    vector<int> cycle;
-    int originalV = e.second;
-    int v = e.second;
-    int w = e.first;
     
-    while (v != w){
-        cycle.push_back(v+1);
-        v = parents[v];
-    }
-
-    cycle.push_back(w+1);
-    cycle.push_back(cycle[0]);
-
-    cout << cycle.size() << "\n";
-    for (int i = 0; i < cycle.size(); i++){
-        if (i == cycle.size() - 1){
-            cout << cycle[i] << "\n";
-        } else {
-            cout << cycle[i] << " ";
-        }
-    }
+    Graph G(n);
+    forn(_, m){
+		int u, v;
+		cin >> u >> v;
+		u--; v--;
+		G.addEdge(u,v);
+	}
+	
+	G.defineParents();
+	
+	forn(i, G.m){
+		if (!G.visited[i] && G.findCycle(i)){			
+			int currentVertex = G.cycle_end;
+			vector<int> cycle;
+			//~ DBG(G.cycle_start); DBG(G.cycle_end);
+			
+			while (currentVertex != G.cycle_start){
+				//~ DBG(currentVertex);
+				cycle.pb(currentVertex);
+				currentVertex = G.parent[currentVertex];
+			}
+			
+			cycle.pb(G.cycle_start);
+			cout << SIZE(cycle)+1 << "\n";
+			dforn(j, SIZE(cycle)) cout << cycle[j]+1 << " ";
+			cout << G.cycle_start + 1 << "\n";
+			
+			return 0;
+		}
+	}
+	
+	cout << "IMPOSSIBLE\n";
+	return 0;
 }

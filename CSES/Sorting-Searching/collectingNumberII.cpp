@@ -61,48 +61,83 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
+int f(vector<int> &A, int index1, int index2){
+	int res = 0;
 	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
-		}
-		
+	if (index1 == index2){
+		if (0 <= index1-1) res += (A[index1] < A[index1-1]);
+		if (index1+1 < SIZE(A)) res += (A[index1+1] < A[index1]);
+	} else if (index1 + 1 == index2){
+		res += (A[index2] < A[index1]);
+		if (0 <= index1-1) res += (A[index1] < A[index1-1]);
+		if (index2+1 < SIZE(A)) res += (A[index2+1] < A[index2]);
+	} else if (index2 + 1 == index1){
+		res += (A[index1] < A[index2]);
+		if (0 <= index2-1) res += (A[index2] < A[index2-1]);
+		if (index1+1 < SIZE(A)) res += (A[index1+1] < A[index1]);
 	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
+		if (0 <= index1-1) res += (A[index1] < A[index1-1]);
+		if (index1+1 < SIZE(A)) res += (A[index1+1] < A[index1]);
+		if (0 <= index2-1) res += (A[index2] < A[index2-1]);
+		if (index2+1 < SIZE(A)) res += (A[index2+1] < A[index2]);
 	}
 	
-	cout << res << "\n";
+	
+	return res;
+}
+
+void swap(vector<int> &C, int i, int j){
+	int oldValue = C[i];
+	C[i] = C[j];
+	C[j] = oldValue;
 }
 
 int main()
 {
-    cin.tie(0);
-    cin.sync_with_stdio(0);
+	ll n, m;
+	cin >> n >> m;
+
+	vector<int> A(n), B(n);	
 	
-	int t;
-	cin >> t;
-	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	forn(i, n){
+		int k;
+		cin >> k;
+		B[i] = k;
+		A[k-1] = i;
 	}
+	
+	int res = 1;
+	
+	forsn(i, 1, n){
+		if (A[i] < A[i-1]) res++; 
+	}
+	
+	//~ DBG(res);
+	
+	forn(i, m){
+		int a, b;
+		cin >> a >> b;
+		a--; b--;
+		
+		//~ DBG(B); DBG(A);
+		//~ DBG(a); DBG(b);
+		
+		int j1 = B[a], j2 = B[b];
+		swap(B, a, b);
+		//A[j1-1] = a, A[j2-1] = b;
+		
+		res = res - f(A, j1-1, j2-1);
+		swap(A, j1-1, j2-1);
+		//~ DBG(B); DBG(A);
+		//~ DBG(j1-1); DBG(j2-1);
+		res = res + f(A, j1-1, j2-1);
+		
+		//int j2 = B[a], j1 = B[b];
+		//A[j2-1] = a, A[j1-1] = b;
+		
+		cout << res << "\n";
+	}
+	
 	
     return 0;
 }

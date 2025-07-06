@@ -27,8 +27,13 @@ const double PI = acos(-1.0);
 #define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
-#define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
-#define dforall(i,c) for(auto i=(c).rbegin(), i != (c).rend(); i--)
+
+// Show pair
+template <typename T1, typename T2>
+ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
+    os << "{" << p.first << "," << p.second << "}";
+    return os;
+}
 
 // Show vector
 template <typename T>
@@ -39,13 +44,6 @@ ostream & operator <<(ostream &os, const vector<T> &v) {
         os << v[i];
     }
     return os << "]";
-}
-
-// Show pair
-template <typename T1, typename T2>
-ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
-    os << "{" << p.first << "," << p.second << "}";
-    return os;
 }
 
 // Show set
@@ -59,10 +57,6 @@ ostream & operator <<(ostream &os, const set<T> &s) {
     return os << "}";
 }
 
-
-// Rango de int: -2*10^9 <= x <= 2*10^9
-// Rango de long long: -9*10^18 <= x <= 9*10^18
-
 // ############################################################### //
 
 struct BinaryJumping{
@@ -72,7 +66,7 @@ struct BinaryJumping{
 	
 	// Inicializacion en tiempo O(n*log(max_k))
 	BinaryJumping(vector<int> &succ, int max_k){
-		logk = (int) log2(max_k);  // Piso.
+		logk = log2(max_k);  // Piso.
 		binaryJumping.assign(SIZE(succ), vector<int>(logk+1, UNDEFINED));
 		
 		for(int i=0; i<SIZE(succ); i++){
@@ -104,46 +98,30 @@ struct BinaryJumping{
 	
 };
 
-vector<int> distanceFromRoot;
-vector<vector<int>> adjList;
-
-void calculateDistanceFromRoot(int v, int currentDepth){
-	distanceFromRoot[v] = currentDepth;
-	for (int u : adjList[v]) calculateDistanceFromRoot(u, currentDepth+1);
-}
-
-int main() {
-    ios :: sync_with_stdio(0);
+int main()
+{
     cin.tie(0);
- 
-    int n, q;
-    cin >> n >> q;
+    cin.sync_with_stdio(0);
 	
-	vector<int> parent(n, UNDEFINED);
-	adjList.resize(n);
+	int n, q;
+	cin >> n >> q;
 	
-    forsn(i, 1, n){
-        int v;
-        cin >> v;
-        v--;
-		parent[i] = v;
-		adjList[v].pb(i);
-    }
-    
-    BinaryJumping G(parent, n);
-	distanceFromRoot.resize(n, 0);
-	calculateDistanceFromRoot(0, 0);
+	vector<int> succ(n);
+	forn(i, n) cin >> succ[i];
+	forn(i, n) succ[i]--;
 	
-    forn(_, q){
-        int v, jumps;
-        cin >> v >> jumps;
-        v--;
-
-        if (distanceFromRoot[v] - jumps < 0){
-            cout << -1 << "\n";
-            continue;
-        }
-
-        cout << G.succ_k(v, jumps) + 1 << "\n";
-    }
+	vector<pair<int, int>> queries(q);
+	int maxJump = n;
+	forn(i, q){
+		int v, jumps;
+		cin >> v >> jumps;
+		v--;
+		queries[i] = {v, jumps};
+		maxJump = max(maxJump, jumps);
+	}
+	
+	BinaryJumping G(succ, maxJump);
+	forn(i, q) cout << G.succ_k(queries[i].fst, queries[i].snd) + 1 << "\n";
+	
+    return 0;
 }

@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -60,42 +60,45 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5001];
-ll A[5000];
-
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j+1] - prefixSum[i];
-	return res;
-}
-
-ll dp(int i, int j){
-	if (i > j) return 0;
-	
-	if (memo[i][j] == LINF){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
-	}
-	
-	return memo[i][j];
-}
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = 0;
-	
-	forn(i, n){
-		if (i > 0) prefixSum[i] = prefixSum[i-1] + A[i-1];
-		forn(j, n) memo[i][j] = LINF;
+ 
+    int t;
+    cin >> t;
+    
+    forn(_ ,t){
+		int n;
+		cin >> n;
+		
+		vector<int> A(n);
+		forn(i, n) cin >> A[i];
+		
+		vector<int> B(n);
+		forn(i, n) B[i] = A[i];
+		sort(all(B));
+		
+		if (B[0] == B[n-1]){
+			cout << "No\n";
+		} else {
+			cout << "Yes\n";
+
+			int j = 0;
+			forn(i, n){
+				if (A[i] == B[n-1]) j = i;
+			}
+			
+			forn(i, n){
+				if (i != j){
+					cout << 1 << " ";
+				} else {
+					cout << 2 << " ";
+				}
+			}
+			
+			cout << "\n";
+		}
+		
 	}
-	
-	prefixSum[n] = prefixSum[n-1] + A[n-1];
-	cout << dp(0, n-1) << "\n";
 }

@@ -1,116 +1,128 @@
 #include <bits/stdc++.h>
 using namespace std;
+
 typedef long long ll;
-typedef pair<int, int> edge;
-const ll INF = LLONG_MAX;
+typedef long double ld;
 
-void bfs(int v, vector<vector<pair<ll, ll>>> &adjList, vector<bool> &visited){
-    int n = adjList.size();
-    visited[v] = true;
+const ll UNDEFINED = -1;
+const int MAX_N = 1e5 + 1;
+const int MOD = 1e9 + 7;
+const int INF = 1e9;
+const ll LINF = 1e18;
+const ll zero = 0;
+const ld EPSILON = 1e-10;
+const double PI = acos(-1.0);
 
-    queue<int> q;
-    q.push(v);
+#define pb push_back
+#define fst first
+#define snd second
+#define esta(x,c) ((c).find(x) != (c).end())  // Devuelve true si x es un elemento de c.
+#define all(c) (c).begin(),(c).end()
+#define SIZE(c) int((c).size())
 
-    while (!q.empty()){
-        int u = q.front();
-        q.pop();
+#define DBG(x) cerr << #x << " = " << (x) << endl
+#define RAYA cerr << "----------" << endl
 
-        for (int i = 0; i < adjList[u].size(); i++){
-            int w = adjList[u][i].second;
-            
-            if (!visited[w]){
-                visited[w] = true;
-                q.push(w);
-            }
-        }
-    }
+#define forn(i,n) for (int i=0;i<(int)(n);i++)
+#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
+#define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
+
+// Show pair
+template <typename T1, typename T2>
+ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
+    os << "{" << p.first << "," << p.second << "}";
+    return os;
 }
 
-bool bellmanFord(int v, vector<pair<ll, edge>> &edges, vector<ll> &distances){
-    int n = distances.size();
-    int m = edges.size();
-    distances[v] = 0;
-    bool res = false;
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++){
-            ll weight = edges[j].first;
-            edge e = edges[j].second;
-            int v = e.first;
-            int u = e.second;
-
-            if (distances[v] != INF){
-                ll newDistance = (ll) distances[v] + weight; 
-                distances[u] = min(distances[u], newDistance);
-            }
-        }
+// Show vector
+template <typename T>
+ostream & operator <<(ostream &os, const vector<T> &v) {
+    os << "[";
+    forn(i, v.size()) {
+        if (i > 0) os << ",";
+        os << v[i];
     }
-
-    for (int j = 0; j < m; j++){
-        ll weight = edges[j].first;
-        edge e = edges[j].second;
-        int v = e.first;
-        int u = e.second;
-
-        if (distances[v] != INF){
-            ll newDistance = (ll) distances[v] + weight;
-            if (newDistance < distances[u]){
-                res = true;
-                break;
-            }
-        }
-    }
-
-    return res;
+    return os << "]";
 }
 
+// Show set
+template <typename T>
+ostream & operator <<(ostream &os, const set<T> &s) {
+    os << "{";
+    for(auto it = s.begin(); it != s.end(); it++){
+        if(it != s.begin()) os << ",";
+        os << *it;
+    }
+    return os << "}";
+}
 
+// ############################################################### //
 
+using peso = ll;
+using indice_nodo = ll;
+using nodo_pesado = pair<peso, indice_nodo>;
+
+struct Edge {
+    ll a, b, cost;
+
+    Edge(ll desde, ll hasta, ll c) : a(desde), b(hasta), cost(c) {}
+};
+
+ 
+bool bellman_ford(ll n, indice_nodo inicio, vector<Edge> &edges, vector<peso> &dist){
+    // Devuelve true sii existe un ciclo de longitud negativa.
+    // Calcula SSSP en dist.
+ 
+    // Obtiene las distancias mas cortas desde inicio hacia todos.
+    dist[inicio] = 0;
+    forn(i, n){
+        for(Edge e : edges){
+            if(-LINF < dist[e.a] && dist[e.a] < LINF){
+                dist[e.b] = min(dist[e.b], dist[e.a] + e.cost);
+            }
+        }
+    }
+ 
+    // Detectar ciclo de longitud negativa.
+    for(Edge e : edges){
+        if(-LINF < dist[e.a] && dist[e.a] < LINF){
+            if (dist[e.a] + e.cost < dist[e.b]){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+ 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-
+ 
     int n, m;
     cin >> n >> m;
     
-    vector<vector<pair<ll, ll>>> adjListTrans(n);
-    vector<pair<ll, edge>> edgesTrans;
-    vector<pair<ll, edge>> edges;
-    vector<ll> distances(n, INF);
-    vector<bool> visited(n, false);
-
-    for (int i = 0; i < m; i++) {
+    vector<Edge> edges;
+    vector<ll> distances(n, LINF);
+ 
+    forn(_, m) {
         ll v, u , w;
         cin >> v >> u >> w;
         w *= -1;
         v -= 1;
         u -= 1;
-
-        edge e = {u, v};
-        adjListTrans[u].push_back({w, v});
-        edgesTrans.push_back({w, e});
+ 
+        Edge e = Edge(v, u, w);
+        edges.push_back(e);
     }
     
-    bfs(n-1, adjListTrans, visited);
-
-    for (int i = 0; i < edgesTrans.size(); i++) {
-        ll weight = edgesTrans[i].first;
-        edge e = edgesTrans[i].second;
-        ll v = e.first;
-
-        if (visited[v]){
-            ll u = e.second;
-            edge newEdge = {u, v};
-            edges.push_back({weight, newEdge});
-        }
-    }
-
-    bool existsNegativeCycle = bellmanFord(0, edges, distances);
+    bool existsNegativeCycle = bellman_ford(n, 0, edges, distances);
+ 
     if (existsNegativeCycle){
         cout << -1 << "\n";
         return 0;
     }
-
+ 
     if (distances[n-1] > 0){
         cout << distances[n-1]*(-1) << "\n";
     } else {

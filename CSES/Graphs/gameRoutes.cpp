@@ -4,6 +4,12 @@ typedef long long ll;
 typedef pair<int, int> edge;
 const ll INF = LLONG_MAX;
 const int NEG_INF = INT_MIN;
+const int MOD = 1e9 + 7;
+
+ll addMod(ll a, ll b, ll m = MOD){
+    int res = ((a % m) + (b % m)) % m;
+    return res;
+}
 
 void topologicalSortUtil(int v, vector<vector<int>> &adjList, vector<bool> &visited, stack<int> &stack){
     visited[v] = true;
@@ -42,7 +48,7 @@ int main() {
     cin >> n >> m;
     
     vector<vector<int>> adjList(n);
-    vector<int> distances(n, NEG_INF);
+    vector<ll> numberOfPaths(n, 0);
     vector<int> parents(n);
 
     for (int i = 0; i < m; i++) {
@@ -53,7 +59,7 @@ int main() {
         adjList[v].push_back(w);
     }
 
-    distances[0] = 0;
+    numberOfPaths[0] = 1;
 
     stack<int> s = topologicalSort(adjList);
 
@@ -61,39 +67,9 @@ int main() {
         int u = s.top();
         s.pop();
         
-        for (int i = 0; i < adjList[u].size(); i++){
-			int w = adjList[u][i];
-
-            if (distances[w] < distances[u] + 1){
-                parents[w] = u;
-                distances[w] = distances[u] + 1;
-            }
-        }
+        for (int w : adjList[u]) numberOfPaths[w] = addMod(numberOfPaths[u], numberOfPaths[w], MOD);
     }
 
-    int res = distances[n-1];
-    int lastNode = n-1;
-
-    if (res < 0){
-        cout << "IMPOSSIBLE" << "\n";
-        return 0;
-    }
-
-    cout << res+1 << "\n";
-
-    vector<int> path;
-    while (lastNode != 0){
-        path.push_back(lastNode+1);
-        lastNode = parents[lastNode];
-    }
-
-    path.push_back(1);
-
-    for (int i = path.size() - 1; i >= 0; i--){
-        if (i == 0){
-            cout << path[i] << "\n";
-        } else {
-            cout << path[i] << " ";
-        }
-    }
+    ll res = numberOfPaths[n-1];
+    cout << res << "\n";
 }

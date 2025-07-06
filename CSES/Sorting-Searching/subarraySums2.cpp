@@ -5,6 +5,7 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -61,33 +62,23 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
-	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
-		}
-		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
-	}
-	
-	cout << res << "\n";
+// Calcular extremo izquierdo que cumple P(X)
+int leftBinarySearch(int start, int end, vector<int> &A, int v){
+    int l = start - 1; 
+    int r = end + 1; 
+
+    while(r - l > 1) { 
+        int mid = (l + r) / 2;
+        if(!(A[mid] >= v)) {
+            l = mid;
+        } else {
+            r = mid;
+        }
+    }
+    
+    if (r < start || r > end || !(A[r] >= v)) r = -1; // Si r no está en el intervalo [start,end] o no cumple la propiedad, entonces retorno -1
+
+    return r; // r es el primer elemento que cumple P(X)
 }
 
 int main()
@@ -95,14 +86,37 @@ int main()
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	int n;
+	ll x;
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	cin >> n >> x;
+	
+	vector<ll> A(n);
+	forn(i, n) cin >> A[i];
+	
+	vector<ll> prefixSum(n+1, 0);
+	forsn(i, 1, n+1) prefixSum[i] = prefixSum[i-1] + A[i-1];
+	map<ll, vector<int>> positions;
+	
+	forsn(i, 1, n+1) positions[prefixSum[i]].pb(i);
+	//~ DBG(A);
+	//~ DBG(prefixSum);
+	
+	//~ for (auto p : positions){
+		//~ DBG(p.fst); DBG(p.snd);
+	//~ }
+	
+	ll res = 0;
+	
+	forsn(i, 1, n+1){
+		ll toFind = x + prefixSum[i-1];
+		int index = leftBinarySearch(0, SIZE(positions[toFind])-1, positions[toFind], i);
+		//~ DBG(toFind); DBG(index);
+		if (index != UNDEFINED) res += SIZE(positions[toFind]) - index;
 	}
+	
+	cout << res << "\n";
+	
 	
     return 0;
 }

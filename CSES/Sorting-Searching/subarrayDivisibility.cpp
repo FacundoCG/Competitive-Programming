@@ -5,6 +5,7 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -26,7 +27,7 @@ const double PI = acos(-1.0);
 #define RAYA cerr << "----------" << endl
 
 #define forn(i,n) for (int i=0;i<(int)(n);i++)
-#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define forsn(i,s,n) for (ll i=(s);i<(ll)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
 
@@ -61,48 +62,62 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
-	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
-		}
-		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
-	}
-	
-	cout << res << "\n";
+ll mod(ll a, ll m){
+	ll res = ((a % m) + m) % m;
+	return res;
 }
+
+ll addMod(ll a, ll b, ll m = MOD){
+    ll res = (mod(a, m) + mod(b, m)) % m;
+    return res;
+}
+
+int leftBinarySearch(int start, int end, vector<ll> &A, ll v){
+    int l = start - 1; 
+    int r = end + 1; 
+
+    while(r - l > 1) { 
+        int mid = (l + r) / 2;
+        if(!(A[mid] >= v)) {
+            l = mid;
+        } else {
+            r = mid;
+        }
+    }
+    
+    if (r < start || r > end || !(A[r] >= v)) r = -1; // Si r no está en el intervalo [start,end] o no cumple la propiedad, entonces retorno -1
+
+    return r; // r es el primer elemento que cumple P(X)
+}
+
+ll n;
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	cin >> n;
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	vector<ll> A(n);
+	forn(i, n) cin >> A[i];
+	
+	vector<ll> prefixSum(n+1);
+	forsn(i, 1, n+1) prefixSum[i] = addMod(prefixSum[i-1], A[i-1], n);
+	
+	//~ DBG(prefixSum);
+	
+	map<ll, vector<ll>> positions;
+	forsn(i, 1, n+1) positions[prefixSum[i]].pb(i);
+	ll res = 0;
+	
+	forsn(i, 1, n+1){
+		ll v = prefixSum[i-1];
+		int index = leftBinarySearch(0, SIZE(positions[v])-1, positions[v], i);
+		if (index != UNDEFINED) res += SIZE(positions[v]) - index;
 	}
+	
+	cout << res << "\n";
 	
     return 0;
 }

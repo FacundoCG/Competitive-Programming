@@ -61,48 +61,67 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
-	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
-		}
-		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
-	}
-	
-	cout << res << "\n";
+enum Color {WHITE, GREY, BLACK};  // Sin visitar / en proceso / Procesado.
+
+// Devuelve true si encuentra un ciclo.
+bool tdfs(ll v, const vector<vector<ll>> &ady, vector<Color> &color, vector<ll> &orden){
+    color[v] = GREY;
+
+    for(auto u : ady[v]){
+        if(color[u] == GREY){  // Si encuentra un nodo en proceso, hay un ciclo.
+            return true;
+        }
+        else if (color[u] == WHITE){  // Si encuentra un nodo no visitado, realiza DFS.
+            if(tdfs(u, ady, color, orden)) return true;
+        }
+    }
+
+    orden.pb(v);
+    color[v] = BLACK;
+    return false;
 }
+
+// Devuelve true sii existe un ciclo en G.
+// Si no existe ciclo, en orden queda almacenado un orden topologico de G.
+bool toposort(vector<vector<ll>> &ady, vector<ll> &orden){
+    vector<Color> color(SIZE(ady), WHITE);
+    orden.clear();
+
+    forn(v, SIZE(ady)){
+        if (color[v] == WHITE && tdfs(v, ady, color, orden)) return true;
+    }
+
+    reverse(all(orden));
+    return false;
+}
+
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	int n, m;
+	cin >> n >> m;
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	vector<vector<ll>> adjList(n);
+	forn(_, m){
+		ll a, b;
+		cin >> a >> b;
+		a--; b--;
+		adjList[a].pb(b);
 	}
+	
+	vector<ll> orden;
+	toposort(adjList, orden);
+	
+	vector<ll> res(n, 1);
+	dforn(i, n){
+		ll v = orden[i];
+		for (ll u : adjList[v]) res[v] += res[u];
+	}
+	
+	
 	
     return 0;
 }

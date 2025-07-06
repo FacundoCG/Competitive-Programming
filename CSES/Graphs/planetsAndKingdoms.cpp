@@ -61,33 +61,76 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
+struct SCC {
+	int n, comps = 0;
+	vb vis;
+	vi order, id_scc;
+	vector<vi> ady, ady_t;
+	vi representante;  // (Opcional) Dada un *id_scc*, te dice algun nodo de esa scc.
 	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
+	SCC(vector<vi> &_ady, vector<vi> &_ady_t){
+		ady = _ady;
+		ady_t = _ady_t;
+		n = SIZE(ady);
+		vis.assign(n, false);
+		id_scc.resize(n);
+		comps = 1;
 		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
+		forn(i, n){
+			if(!vis[i]) { dfs1(i); }
 		}
-		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
+		vis.assign(n, false);
+		reverse(all(order));
+		for(int v : order){
+			if(!vis[v]){
+				dfs2(v, comps);
+				representante.pb(v);
+				comps++;  // Aumento el contador de SCC.
+			}
 		}
 	}
 	
-	cout << res << "\n";
+	vector<vi> sccToDAG(){  // (Opcional)
+		vector<set<int>> ady_dag_with_set(comps);
+		forn(v, n){
+			for(int u : ady[v]){
+				if(id_scc[v] == id_scc[u]) {continue;}  // Evita self-loops.
+				ady_dag_with_set[id_scc[v]].insert(id_scc[u]);
+			}
+		}
+		// Convertir a vector de vector de int.
+		vector<vi> ady_dag(comps);
+		forn(i, comps){
+			ady_dag[i] = vi(all(ady_dag_with_set[i]));
+		}
+		return ady_dag;
+	}
+
+private:
+	void dfs1(int v) {
+		vis[v] = true;
+		for(int u : ady[v]) {
+			if (!vis[u]) { dfs1(u); }
+		}
+		order.pb(v);
+	}
+    
+	void dfs2(int x, int comp) {
+		vis[x] = true;
+		for (int u : ady_t[x]) {
+			if (!vis[u]) { dfs2(u, comp); }
+		}
+		id_scc[x] = comp;
+	}
+};
+
+void dfs(int v, vector<vi> &adjList, vector<bool> &visited){
+	visited[v] = true;
+	
+	for (int u : adjList[v]){
+		if (visited[u]) continue;
+		dfs(u, adjList, visited);
+	}
 }
 
 int main()
@@ -95,14 +138,23 @@ int main()
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	int n, m;
+	cin >> n >> m;
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	vector<vector<int>> adjList(n), adjListT(n);
+		
+	forn(i, m){
+		int a, b;
+		cin >> a >> b;
+		a--; b--;
+		adjList[a].pb(b);
+		adjListT[b].pb(a);
 	}
 	
+	SCC G(adjList, adjListT);
+	cout << G.comps - 1 << "\n";
+	forn(i, n) cout << G.id_scc[i] << " ";
+	cout << "\n";
+		
     return 0;
 }

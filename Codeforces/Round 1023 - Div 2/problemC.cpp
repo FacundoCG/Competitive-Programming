@@ -6,7 +6,7 @@ typedef long double ld;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -60,42 +60,82 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5001];
-ll A[5000];
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j+1] - prefixSum[i];
-	return res;
-}
+const ll NEG_VAL = (ll) pow(10, 13)*(-1);
+ll n, k;
 
-ll dp(int i, int j){
-	if (i > j) return 0;
+ll dp(int i, vector<ll> &A, vector<ll> &memo){
+	if (i == -1) return 0;
 	
-	if (memo[i][j] == LINF){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
+	if (memo[i] == UNDEFINED){
+		memo[i] = max(A[i], A[i] + dp(i-1, A, memo));
 	}
 	
-	return memo[i][j];
+	return memo[i];
+}
+
+void solve(vector<ll> &A, string &s){
+	int j = 0;
+	
+	forn(i, n){
+		if (s[i] == '0') j = i;
+	}
+		
+	vector<ll> suffixSum(n), prefixSum(n);
+	prefixSum[0] = A[0];	
+	suffixSum[n-1] = A[n-1];
+	forsn(i, 1, n) prefixSum[i] = (ll) prefixSum[i-1] + A[i];	
+	dforn(i, n-1) suffixSum[i] = (ll) suffixSum[i+1] + A[i];	
+	
+	ll MAX_RIGHT = NEG_VAL;
+	ll MAX_LEFT = NEG_VAL;
+	forsn(h, j+1, n) MAX_RIGHT = max(MAX_RIGHT, prefixSum[h] - prefixSum[j]);
+	forn(h, j) MAX_LEFT = max(MAX_LEFT, suffixSum[h] - suffixSum[j]);
+			
+	ll maximum = max(MAX_LEFT, MAX_RIGHT);
+	if (MAX_RIGHT <= 0 && MAX_LEFT <= 0){
+	   A[j] = k;
+	} else if (MAX_RIGHT >= 0 && MAX_LEFT >= 0){
+	    A[j] = k - MAX_RIGHT - MAX_LEFT;
+	} else {
+	    A[j] = k - max(MAX_RIGHT, MAX_LEFT);
+	}
 }
 
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
-	
-	cin >> n;
-	forn(i, n) cin >> A[i];
-	prefixSum[0] = 0;
-	
-	forn(i, n){
-		if (i > 0) prefixSum[i] = prefixSum[i-1] + A[i-1];
-		forn(j, n) memo[i][j] = LINF;
+ 
+    int t;
+    cin >> t;
+    
+    forn(_ ,t){
+		cin >> n >> k;
+		
+		string s;
+		cin >> s;
+		vector<ll> A(n);
+		bool elementsToChange = false;
+		forn(i, n) {
+			cin >> A[i];
+			if (s[i] == '0') {
+				A[i] = NEG_VAL; 
+				elementsToChange = true;
+			}
+		}
+		
+		vector<ll> memo(n, UNDEFINED);
+		dp((int) n-1, A, memo);
+		ll res = 0;
+		forn(i, n) res = max(res, memo[i]);
+		
+		if (res > k || (res != k && !elementsToChange)){
+			cout << "No\n";
+		} else {
+			cout << "Yes\n";
+			if (res != k && elementsToChange) solve(A, s);
+			forn(i, n) cout << A[i] << " ";
+			cout << "\n";
+		}
 	}
-	
-	prefixSum[n] = prefixSum[n-1] + A[n-1];
-	cout << dp(0, n-1) << "\n";
 }

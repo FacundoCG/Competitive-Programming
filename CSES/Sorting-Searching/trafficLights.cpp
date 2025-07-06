@@ -61,33 +61,10 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
-	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
-		}
-		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
-	}
-	
-	cout << res << "\n";
+typedef pair<int, int> interval;
+
+bool isValid(interval p){
+	return p.fst <= p.snd;
 }
 
 int main()
@@ -95,14 +72,50 @@ int main()
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	int x, n;
+	cin >> x >> n;
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	set<interval> s = {{0, x}};
+	multiset<int> intervalLengths = {x};
+	
+	forn(_, n){
+		int p;
+		cin >> p;
+		
+		interval light = {p, p};
+		auto it = s.lower_bound(light);
+		bool flag = true;
+		
+		if (it == s.end()) {
+			it--;
+			flag = false;
+		}
+		
+		interval currentInterval = *it;
+		
+		if (flag && currentInterval.fst != p){
+			it--;
+			currentInterval = *it;
+		}
+		
+		int currentLength = currentInterval.snd - currentInterval.fst;
+		auto toDelete = intervalLengths.find(currentLength);
+		
+		// Agrego intervalos nuevos y sus longitudes
+		interval newInterval1 = {currentInterval.fst, p}, newInterval2 = {p, currentInterval.snd};
+		s.insert(newInterval1);
+		s.insert(newInterval2);
+		intervalLengths.insert(p - currentInterval.fst);
+		if (newInterval1 != newInterval2) intervalLengths.insert(currentInterval.snd - p);
+		
+		// Elimino intervalo viejo y su longitud
+		intervalLengths.erase(toDelete);
+		s.erase(it); 
+		
+		cout << *intervalLengths.rbegin() << " ";
 	}
+	
+	cout << "\n";
 	
     return 0;
 }

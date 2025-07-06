@@ -61,48 +61,53 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
-	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
-		}
-		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
-	}
-	
-	cout << res << "\n";
-}
+typedef pair<int, int> interval;
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	int n;
+	cin >> n;
+	vector<pair<interval, int>> A(n);
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	forn(i, n){
+		int a, b;
+		cin >> a >> b;
+		interval c = {a, b};
+		A[i] = {c, i};
 	}
+	
+	sort(all(A));
+	
+	vector<int> res(n);
+	set<pair<int, int>> used = {{A[0].fst.snd, A[0].snd}}; // {Tiempo que se libera, indice}
+	res[A[0].snd] = 1;
+	
+	forsn(i, 1, n){
+		int startTime = A[i].fst.fst, endTime = A[i].fst.snd, index = A[i].snd;
+		auto it = used.lower_bound({startTime, -1}); // Esto me va a dar el primer pair tal que: tiempoLibera >= startTime
+		// Si retrocedo uno quiere decir que, tiempoLibera < startTime que es lo que quiero
+		// No puedo retroceder si es el primero unicamente
+				
+		if (it != used.begin()){ // Si hay alguna habitación que se liberó para el intervalo actual
+			it--;
+			res[A[i].snd] = res[(*it).snd]; // Uso la casa que estaba usando ese intervalo
+			used.erase(it); // Borro esa habitación
+		} else { // Si no hay una habitación nueva
+			res[A[i].snd] = SIZE(used) + 1; // Pido una habitación nueva
+		}
+		
+		used.insert({endTime, index});
+	}
+	
+	int numberOfRooms = 0;
+	forn(i, n) numberOfRooms = max(numberOfRooms, res[i]);
+	
+	cout << numberOfRooms << "\n";
+	forn(i, n) cout << res[i] << " ";
+	cout << "\n";
 	
     return 0;
 }

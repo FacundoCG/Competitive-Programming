@@ -5,6 +5,7 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -61,48 +62,71 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
+struct CountNumbers {
+	string b;
+	vector<vector<vl>> memo;
 	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
-		}
-		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
+	CountNumbers(string &number) : b(number){
+		memo.resize(SIZE(b), vector<vl>(10, vl(3, UNDEFINED)));
 	}
 	
-	cout << res << "\n";
-}
+	ll dp(int i, int lastDigit, int state){
+		if (i >= SIZE(b)) return 1;
+		int currentDigit = b[i] - '0';
+		
+		if (memo[i][lastDigit][state] == UNDEFINED){
+			memo[i][lastDigit][state] = 0;
+
+			if (state == 0){		
+				forn(j, 10){
+					if (j != lastDigit) memo[i][lastDigit][state] += dp(i+1, j, 0);
+				}
+			} else if (state == 1){
+				forn(j, currentDigit+1){
+					if (j == currentDigit && j != lastDigit) memo[i][lastDigit][state] += dp(i+1, j, 1);
+					if (j != currentDigit && j != lastDigit) memo[i][lastDigit][state] += dp(i+1, j, 0);
+				}
+			} else {
+				memo[i][lastDigit][state] += dp(i+1, 0, 2);
+				forsn(j, 1, 10) memo[i][lastDigit][state] += dp(i+1, j, 0);
+			}
+		}
+	
+		return memo[i][lastDigit][state];
+	}
+	
+	ll solve(){
+		int firstDigit = b[0] - '0';
+		ll res = dp(1, 0, 2);
+		
+		forsn(j, 1, firstDigit+1){
+			int state = (j == firstDigit);
+			res += dp(1, j, state);
+		}
+		
+		return res;
+	}
+};
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	ll a, b;
+	cin >> a >> b;
+		
+	string firstNumber = to_string(b);
+	CountNumbers B(firstNumber);	
+	ll res = B.solve();
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	if (a != 0){
+		string secondNumber = to_string(a-1);
+		CountNumbers A(secondNumber);
+		res -= A.solve();
 	}
 	
+	cout << res << "\n";
+		
     return 0;
 }

@@ -7,7 +7,7 @@ using vi = vector<int>;
 using vb = vector<bool>;
 
 const ll UNDEFINED = -1;
-const int MAX_N = 1e5 + 1;
+const int MAX_N = 2*1e5;
 const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
@@ -61,33 +61,30 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
+int n;
+vector<ll> A;
+
+ll solve(int i, ll leftSum, ll rightSum){
+	//~ DBG(i); DBG(leftSum); DBG(rightSum); DBG(A);
 	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
-		}
-		
+	ll totalTimeToReadRightBooks, totalTimeToReadLeftBooks;
+	vector<ll> suffixSum(n+1), prefixSum(n+1);	
+	dforn(j, n) suffixSum[j] = suffixSum[j+1] + A[j];
+	forsn(j, 1, n+1) prefixSum[j] = prefixSum[j-1] + A[j-1];
+	//~ DBG(suffixSum); DBG(prefixSum);
+	
+	if (leftSum <= rightSum){
+		// rightSum es lo que me tomo leer A[i+1], ..., A[n-1]
+		// leftSum es lo que me tomo leer A[0], ..., A[i-1]
+		//~ cout << "Acá\n";
+		totalTimeToReadRightBooks = leftSum + suffixSum[i] + max(rightSum - (prefixSum[n] - A[i+1]), 0ll);
+		totalTimeToReadLeftBooks = rightSum + prefixSum[i+1] + max(leftSum + A[i] - (prefixSum[n] - A[i]), 0ll);
 	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
+		totalTimeToReadLeftBooks = rightSum + prefixSum[i+1] + max(leftSum - (prefixSum[n] - A[i-1]), 0ll);
+		totalTimeToReadRightBooks = leftSum + suffixSum[i] + max(rightSum + A[i] - (prefixSum[n] - A[i]), 0ll);
 	}
 	
-	cout << res << "\n";
+	return max(totalTimeToReadRightBooks, totalTimeToReadLeftBooks);
 }
 
 int main()
@@ -95,14 +92,37 @@ int main()
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	cin >> n;
+	A.resize(n);
+	forn(i, n) cin >> A[i];
+	sort(all(A));
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	if (n == 1){
+		cout << A[0]*2 << "\n";
+		return 0;
+	} else if (n == 2){
+		ll totalSum = A[0] + A[1];
+		cout << totalSum + A[1] - A[0] << "\n";
+		return 0;
 	}
+	
+	int i = 0;
+	int j = n-1;
+	ll res = 0;
+	ll leftSum = 0;
+	ll rightSum = 0;
+	
+	while (i <= j){
+		if (i == j){			
+			res = solve(i, leftSum, rightSum);
+			i++;
+		} else {
+			if (leftSum <= rightSum){ leftSum += A[i]; i++;} 
+			else { rightSum += A[j]; j--;}
+		}
+	}
+	
+	cout << res << "\n";
 	
     return 0;
 }

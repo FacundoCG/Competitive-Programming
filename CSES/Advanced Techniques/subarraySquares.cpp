@@ -3,10 +3,13 @@ using namespace std;
 
 typedef long long ll;
 typedef long double ld;
+using vi = vector<int>;
+using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
-const ll MOD = 1e9 + 7;
+const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
@@ -27,8 +30,13 @@ const double PI = acos(-1.0);
 #define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
-#define forall(i,c) for(auto i=(c).begin(), i != (c).end(); i++)
-#define dforall(i,c) for(auto i=(c).rbegin(), i != (c).rend(); i--)
+
+// Show pair
+template <typename T1, typename T2>
+ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
+    os << "{" << p.first << "," << p.second << "}";
+    return os;
+}
 
 // Show vector
 template <typename T>
@@ -39,13 +47,6 @@ ostream & operator <<(ostream &os, const vector<T> &v) {
         os << v[i];
     }
     return os << "]";
-}
-
-// Show pair
-template <typename T1, typename T2>
-ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
-    os << "{" << p.first << "," << p.second << "}";
-    return os;
 }
 
 // Show set
@@ -60,42 +61,51 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 }
 
 // ############################################################### //
-int n;
-ll memo[5000][5000];
-ll prefixSum[5001];
-ll A[5000];
 
-ll sumRange(int i, int j){
-	if (i > j) return 0;
-	ll res = prefixSum[j+1] - prefixSum[i];
+vl prefixSum;
+
+ll costs(int i, int j){
+	ll res = prefixSum[j];
+	if (i > 0) res -= prefixSum[i-1];
+	res = res*res;
 	return res;
 }
 
-ll dp(int i, int j){
-	if (i > j) return 0;
+void divide_and_conquer(int k, int l, int r, int optL, int optR, vector<vl> &memo){
+	if (l > r) return ;
+	int middle = (l + r)/2;
 	
-	if (memo[i][j] == LINF){
-		ll option1 = A[i] + sumRange(i+1, j) - dp(i+1, j);
-		ll option2 = A[j] + sumRange(i, j-1) - dp(i, j-1);
-		memo[i][j] = max(option1, option2);
+	int optIndex = UNDEFINED;
+		
+	forsn(c, max(1, optL), min(optR, middle)+1){
+		ll value = memo[k-1][c-1] + costs(c, middle);
+		if (value < memo[k][middle]) optIndex = c;
+		memo[k][middle] = min(memo[k][middle], value);
 	}
-	
-	return memo[i][j];
+		
+	divide_and_conquer(k, l, middle-1, optL, optIndex, memo);
+	divide_and_conquer(k, middle+1, r, optIndex, optR, memo);
 }
 
-int main() {
-    ios :: sync_with_stdio(0);
+int main()
+{
     cin.tie(0);
+    cin.sync_with_stdio(0);
 	
-	cin >> n;
+	int n, k;
+	cin >> n >> k;
+	
+	vl A(n);
 	forn(i, n) cin >> A[i];
-	prefixSum[0] = 0;
 	
-	forn(i, n){
-		if (i > 0) prefixSum[i] = prefixSum[i-1] + A[i-1];
-		forn(j, n) memo[i][j] = LINF;
-	}
+	prefixSum.resize(n);
+	prefixSum[0] = A[0];
+	forsn(i, 1, n) prefixSum[i] = prefixSum[i-1] + A[i];
 	
-	prefixSum[n] = prefixSum[n-1] + A[n-1];
-	cout << dp(0, n-1) << "\n";
+	vector<vl> memo(k+1, vl(n, LINF));
+	forn(i, n) memo[1][i] = costs(0, i);
+	forsn(i, 2, k+1) divide_and_conquer(i, 0, n-1, 0, n-1, memo);
+	cout << memo[k][n-1] << "\n";
+	
+    return 0;
 }

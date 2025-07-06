@@ -61,33 +61,31 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-void answerQuery(ll row, ll column){
-	ll res = 0;
-	ll c = abs(column - row);
-	
-	if (row <= column){
-		// Tengo los números de [(column-1)*(column-1)+1, column*column]
-		ll a = (ll) column * column;
-		ll middlePoint = (ll) a - column + 1;
-		
-		if (column % 2 == 1){
-			res = (ll) middlePoint + c;
-		} else {
-			res = (ll) middlePoint - c;
+enum ESTADO{
+	VISITADO,
+	VISITANDO,
+	NO_VISITADO
+};
+
+// Acá devuelve ciclos de longitud 2
+int findCycle(int v, vector<vector<int>> &adjList, vector<int> &parent, vector<ESTADO> &visited){
+    visited[v] = VISITANDO;
+    
+    for (int u : adjList[v]){
+        if (visited[u] == VISITANDO) {
+			parent[u] = UNDEFINED;
+			return v;
 		}
 		
-	} else {
-		// Tengo los números de [(row-1)*(row-1), row*row)
-		ll a = (ll) row * row;
-		ll middlePoint = (ll) a - row + 1;
-		if (row % 2 == 1){
-			res = middlePoint - c;
-		} else {
-			res = middlePoint + c;
-		}
-	}
-	
-	cout << res << "\n";
+        if (visited[u] == NO_VISITADO){
+			parent[u] = v;
+            int possibleCycle = findCycle(u, adjList, parent, visited);
+            if (possibleCycle != UNDEFINED) return possibleCycle;
+        }
+    }
+
+    visited[v] = VISITADO;
+    return UNDEFINED;
 }
 
 int main()
@@ -95,14 +93,42 @@ int main()
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int t;
-	cin >> t;
+	int n, m;
+	cin >> n >> m;
 	
-	forn(_, t){
-		ll y, x;
-		cin >> y >> x;
-		answerQuery(y, x);
+	vector<vector<int>> adjList(n);
+	vector<ESTADO> visited(n, NO_VISITADO);
+	vector<int> parent(n, UNDEFINED);	
+		
+	forn(i, m){
+		int a, b;
+		cin >> a >> b;
+		a--; b--;
+		adjList[a].pb(b);
 	}
 	
+	forn(i, n){
+		if (visited[i] == NO_VISITADO){
+			int startCycle = findCycle(i, adjList, parent, visited);
+			if (startCycle != UNDEFINED){
+				vector<int> path;
+				int currentVertex = startCycle;
+				while (currentVertex != UNDEFINED){
+					path.pb(currentVertex);
+					currentVertex = parent[currentVertex];
+				}
+				
+				reverse(all(path));
+				cout << SIZE(path) + 1 << "\n";
+				forn(j, SIZE(path)) cout << path[j] + 1 << " ";
+				cout << path[0] + 1 << "\n";
+				
+				return 0;
+			}
+		}
+	}
+	
+	cout << "IMPOSSIBLE\n";
+		
     return 0;
 }
