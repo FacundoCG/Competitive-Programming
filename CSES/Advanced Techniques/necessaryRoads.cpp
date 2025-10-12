@@ -5,6 +5,7 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -61,25 +62,42 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-int n;
+using Edge = pair<int, int>;
 
-void solve(vector<vi> &A, int i, int j){
-	int res = 0;
+struct Tarjan{
+	vector<vi> adjList;
+	vb visited;
+	vi foundAt, minTimeFound;
+	set<Edge> res;
 	
-	vi mex(3*n+10, false);
-	// Fila i, columna j
-	forn(col, j) mex[A[i][col]] = true;
-	forn(row, i) mex[A[row][j]] = true;
-	
-	forn(k, SIZE(mex)){
-		if (!mex[k]){
-			res = k;
-			break;
-		}
+	Tarjan(vector<vi> &adj) : adjList(adj){
+		visited.resize(SIZE(adjList), false);
+		foundAt.resize(SIZE(adjList));
+		minTimeFound.resize(SIZE(adjList));
 	}
 	
-	A[i][j] = res;
-}
+	// Me dan un grafo simple conexo y quiere darle direccion a las aristas tal que el grafo resultante sea fuertemente conexo
+	void dfs(int v, int currentTime, int parent){
+		visited[v] = true;
+		foundAt[v] = minTimeFound[v] = currentTime;
+		
+		for (int w : adjList[v]){
+			if (w == parent) continue;
+			
+			if (!visited[w]) {
+				dfs(w, currentTime+1, v);
+				
+				if (foundAt[v] < minTimeFound[w]){ // Quiere decir que w no llegó a v ni a ninguno de sus ancestros
+					res.insert({v, w}); // Bridge
+				} 
+				
+				minTimeFound[v] = min(minTimeFound[v], minTimeFound[w]);
+			} else { // Veo un vecino que fue visitado y no es mi padre
+				minTimeFound[v] = min(minTimeFound[v], foundAt[w]);
+			}
+		}
+	}
+};
 
 
 int main()
@@ -87,20 +105,25 @@ int main()
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	cin >> n;
+	int n, m;
+	cin >> n >> m;
 	
-	vector<vi> A(n, vi(n));
-	forn(i, n) A[0][i] = i;
-	forn(i, n) A[i][0] = i;
-	
-	forsn(i, 1, n){
-		forsn(j, 1, n) solve(A, i, j);
+	vector<vi> adjList(n);
+	forn(_, m){
+		int v, u;
+		cin >> v >> u;
+		v--; u--;
+		adjList[u].pb(v);
+		adjList[v].pb(u);
 	}
 	
+	Tarjan G(adjList);
 	forn(i, n){
-		forn(j, n) cout << A[i][j] << " ";
-		cout << "\n";
+		if (!G.visited[i]) G.dfs(i, 0, UNDEFINED);
 	}
+	
+	cout << SIZE(G.res) << "\n"; 
+	for (auto e : G.res) cout << e.fst + 1 << " " << e.snd + 1<< "\n";
 	
     return 0;
 }

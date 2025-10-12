@@ -68,49 +68,18 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-// Segment tree donde guardo los elementos de cada rango en los vértice de forma ordenada
-// Este segment tree te permite responder en un rango cuántos elementos k cumplen tq: x <= k <= y
+#include <ext/pb_ds/assoc_container.hpp> 
+#include <ext/pb_ds/tree_policy.hpp> 
+using namespace __gnu_pbds; 
 
-struct SegmentTree{
-    int n;
-    vl A;
-    ll elemNeutro;
-
-    vector<vl> B;
-
-    SegmentTree(int N, vl &a, ll neutro) : n(N), A(a), elemNeutro(neutro){
-        B.resize(4*n);
-        build(1, 0, n-1);
-    }
-	
-	// # elementos <= x
-	
-    ll f(int v, ll x){
-        //~ ll res = B[v].order_of_key({x+1, -1});
-        ll res = upper_bound(all(B[v]), x) - B[v].begin();
-        //~ ll res = 0;
-        return res;
-    }
-
-    void build(int v, int tl, int tr){ // Vértice actual y rango [tl, tr] que indica este vértice
-        if (tl == tr) B[v].pb(A[tl]);
-        if (tl < tr) {
-            int tm = (tl + tr)/2;
-            build(2*v, tl, tm);
-            build(2*v+1, tm+1, tr); 
-            
-            merge(all(B[2*v]), all(B[2*v+1]), back_inserter(B[v]));
-        }
-    }
-
-    // query(1, 0, n-1, l, r)
-    ll query(int v, int tl, int tr, int l, int r, ll x){
-        if (l > r) return elemNeutro; 
-        if (l == tl && r == tr) return f(v, x); // Respondo la query en este rango
-        int tm = (tl+tr)/2;
-        return query(2*v, tl, tm, l, min(r, tm), x) + query(2*v+1, tm+1, tr, max(l, tm+1), r, x);
-    }
-};
+template <typename T>
+using ordered_multiset = tree<
+    pair<T, int>,
+    null_type,
+    less<pair<T, int>>, // NOT less_equal
+    rb_tree_tag,
+    tree_order_statistics_node_update
+>;
 
 int main()
 {
@@ -122,17 +91,27 @@ int main()
 	
 	vl A(n);
 	forn(i, n) cin >> A[i];
-	
-	SegmentTree S(n, A, 0);
+		
+	ordered_multiset<ll> s;
+	forn(i, n) s.insert({A[i], i});
 	
 	forn(_, q){
-		int a, b, c, d;
-		cin >> a >> b >> c >> d;
-		a--; b--;
+		char c;
+		cin >> c;
 		
-		ll res = S.query(1, 0, n-1, a, b, d) - S.query(1, 0, n-1, a, b, c-1);
-		cout << res << "\n";
+		ll a, b;
+		cin >> a >> b;
+		
+		if (c == '?'){
+			int res = s.order_of_key({b+1, -1}) - s.order_of_key({a, -1});
+			cout << res << "\n";
+		} else {
+			a--;
+			s.erase({A[a], a});
+			A[a] = b;
+			s.insert({A[a], a});
+		}
 	}
-	
+		
     return 0;
 }

@@ -5,11 +5,13 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
 const int MOD = 1e9 + 7;
 const int INF = 1e9;
+const int N_INF = (-1)*1e9;
 const ll LINF = 1e18;
 const ll zero = 0;
 const ld EPSILON = 1e-10;
@@ -62,25 +64,20 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 // ############################################################### //
 
 int n;
+vector<int> A, cap;
 
-void solve(vector<vi> &A, int i, int j){
-	int res = 0;
+int dp(int c, int k, int i, vector<vector<vi>> &memo){
+	if (c < 0 || k < 0) return N_INF;
+	if (k == 0 && c != 0) return N_INF;
+	if (k != 0 && i == n) return N_INF;
+	if (k == 0 && c == 0) return 0;
 	
-	vi mex(3*n+10, false);
-	// Fila i, columna j
-	forn(col, j) mex[A[i][col]] = true;
-	forn(row, i) mex[A[row][j]] = true;
-	
-	forn(k, SIZE(mex)){
-		if (!mex[k]){
-			res = k;
-			break;
-		}
+	if (memo[c][k][i] == UNDEFINED){
+		memo[c][k][i] = max(dp(c, k, i+1, memo), A[i] + dp(c - cap[i], k-1, i+1, memo));
 	}
 	
-	A[i][j] = res;
+	return memo[c][k][i];
 }
-
 
 int main()
 {
@@ -89,18 +86,35 @@ int main()
 	
 	cin >> n;
 	
-	vector<vi> A(n, vi(n));
-	forn(i, n) A[0][i] = i;
-	forn(i, n) A[i][0] = i;
-	
-	forsn(i, 1, n){
-		forsn(j, 1, n) solve(A, i, j);
-	}
-	
+	A.resize(n);
+	cap.resize(n);
+
 	forn(i, n){
-		forn(j, n) cout << A[i][j] << " ";
-		cout << "\n";
+		cin >> cap[i];
+		cin >> A[i];
 	}
+	
+	int capacidadMax = 0, aguaTotal = 0;
+	forn(i, n) capacidadMax += cap[i];
+	forn(i, n) aguaTotal += A[i];
+		
+	vector<vector<vi>> memo(capacidadMax+1, vector<vi>(n+1, vi(n, UNDEFINED)));
+
+	forsn(k, 1, n+1){
+		ld res = 0;
+		
+		forsn(c, 1, capacidadMax+1){
+			int aguaUsada = dp(c, k, 0, memo);
+			ld currentRes = (ld) ((ld) aguaTotal + (ld) aguaUsada)/2.0;
+			currentRes = min(currentRes, (ld) c);
+			res = max(res, currentRes);
+		}
+				
+		cout << setprecision(numeric_limits<ld>::digits10 + 1); // Muestra con full precision para ld
+		cout << res << " ";
+	}
+	
+	cout << "\n";
 	
     return 0;
 }

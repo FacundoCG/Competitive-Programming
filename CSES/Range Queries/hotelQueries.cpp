@@ -73,66 +73,74 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 struct SegmentTree{
     int n;
-    vl A;
+    vl A, B;
     ll elemNeutro;
 
-    vector<vl> B;
-
     SegmentTree(int N, vl &a, ll neutro) : n(N), A(a), elemNeutro(neutro){
-        B.resize(4*n);
+        B.resize(4*n, elemNeutro);
         build(1, 0, n-1);
     }
-	
-	// # elementos <= x
-	
-    ll f(int v, ll x){
-        //~ ll res = B[v].order_of_key({x+1, -1});
-        ll res = upper_bound(all(B[v]), x) - B[v].begin();
-        //~ ll res = 0;
-        return res;
-    }
+
+    ll combine(ll x, ll y){ return max(x, y);}
+    ll make_data(ll x){ return x;}
 
     void build(int v, int tl, int tr){ // Vértice actual y rango [tl, tr] que indica este vértice
-        if (tl == tr) B[v].pb(A[tl]);
-        if (tl < tr) {
+        if (tl == tr) B[v] = make_data(A[tl]); // Cuando llego a una hoja, el valor es el mismo elemento
+        else {
             int tm = (tl + tr)/2;
             build(2*v, tl, tm);
             build(2*v+1, tm+1, tr); 
-            
-            merge(all(B[2*v]), all(B[2*v+1]), back_inserter(B[v]));
+            B[v] = combine(B[2*v], B[2*v+1]);
         }
     }
 
     // query(1, 0, n-1, l, r)
-    ll query(int v, int tl, int tr, int l, int r, ll x){
-        if (l > r) return elemNeutro; 
-        if (l == tl && r == tr) return f(v, x); // Respondo la query en este rango
+    int query(int v, int tl, int tr, ll x){
+        if (tl == tr){
+			if (B[v] >= x) return tl;
+			return UNDEFINED;
+		}
+		
         int tm = (tl+tr)/2;
-        return query(2*v, tl, tm, l, min(r, tm), x) + query(2*v+1, tm+1, tr, max(l, tm+1), r, x);
+        if (B[2*v] >= x) return query(2*v, tl, tm, x);
+        if (B[2*v+1] >= x) return query(2*v+1, tm+1, tr, x);
+        return UNDEFINED;        
+    }
+
+    void update(int v, int tl, int tr, int pos, ll new_val){
+        if (tl == tr) {
+			B[v] = make_data(new_val);
+			A[pos] = new_val;
+        } else {
+            int tm = (tl + tr)/2;
+            if (pos <= tm) update(2*v, tl, tm, pos, new_val);
+            else update(2*v+1, tm+1, tr, pos, new_val);
+            B[v] = combine(B[2*v], B[2*v+1]);
+        }
     }
 };
+
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
-	
-	int n, q;
-	cin >> n >> q;
-	
+
+	int n, m;
+	cin >> n >> m;
+		
 	vl A(n);
 	forn(i, n) cin >> A[i];
+	SegmentTree T(n, A, 0);
 	
-	SegmentTree S(n, A, 0);
-	
-	forn(_, q){
-		int a, b, c, d;
-		cin >> a >> b >> c >> d;
-		a--; b--;
+	forn(_, m){
+		int rooms;
+		cin >> rooms;
 		
-		ll res = S.query(1, 0, n-1, a, b, d) - S.query(1, 0, n-1, a, b, c-1);
-		cout << res << "\n";
+		int index = T.query(1, 0, n-1, rooms);
+		cout << index+1 << "\n";
+		if (index != -1) T.update(1, 0, n-1, index, T.A[index] - rooms);
 	}
-	
-    return 0;
+
+	return 0;
 }

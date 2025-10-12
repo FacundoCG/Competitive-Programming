@@ -5,6 +5,7 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -61,46 +62,64 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-int n;
-
-void solve(vector<vi> &A, int i, int j){
-	int res = 0;
+ll calculateNumberOfSquares(int n){
+	// I need just two points which aren't aligned to define a square
+	ll res = 0;
 	
-	vi mex(3*n+10, false);
-	// Fila i, columna j
-	forn(col, j) mex[A[i][col]] = true;
-	forn(row, i) mex[A[row][j]] = true;
-	
-	forn(k, SIZE(mex)){
-		if (!mex[k]){
-			res = k;
-			break;
+	forn(i, n-1){
+		forn(j, n-1){
+			// I fix A[i][j] as the left upper corner
+			// Now I fix the right down corner
+			// It has to be in rows {i+1, ..., n-1}
+			// It has to be in columns {j+1, ..., n-1}
+			res += (ll) (n-i-1)*(n-j-1);
 		}
 	}
 	
-	A[i][j] = res;
+	return res;
 }
 
+ll calculateNumberOfBadSquares(vector<string> &grid){
+	// I need just two points which aren't aligned to define a square
+	ll res = 0;
+	int n = SIZE(grid);
+	
+	forn(i, n-1){
+		forn(j, n-1){
+			if (grid[i][j] == '1') res += (ll) (n-i-1)*(n-j-1);
+		}
+	}
+	
+	return res;
+}
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
+	int n;
 	cin >> n;
 	
-	vector<vi> A(n, vi(n));
-	forn(i, n) A[0][i] = i;
-	forn(i, n) A[i][0] = i;
+	vector<string> grid(n);
+	forn(i, n) cin >> grid[i];
 	
-	forsn(i, 1, n){
-		forsn(j, 1, n) solve(A, i, j);
-	}
+	//~ vi zerosRows(n), zerosColumns(n);
 	
-	forn(i, n){
-		forn(j, n) cout << A[i][j] << " ";
-		cout << "\n";
-	}
+	//~ forn(i, n){
+		//~ forn(j, n) {
+			//~ zerosRows[i] += (grid[i][j] == '0'); 
+			//~ zerosColumns[j] += (grid[i][j] == '0');
+		//~ }
+	//~ }
+	
+	//~ DBG(grid);
+	//~ DBG(zerosRows); DBG(zerosColumns);
+	
+	ll squares = calculateNumberOfSquares(n);
+	ll badSquares = calculateNumberOfBadSquares(grid);
+	ll goodSquares = squares - badSquares;
+	cout << goodSquares << "\n";
 	
     return 0;
 }

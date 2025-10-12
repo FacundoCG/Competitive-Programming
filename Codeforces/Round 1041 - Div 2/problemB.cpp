@@ -68,70 +68,52 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-// Segment tree donde guardo los elementos de cada rango en los vértice de forma ordenada
-// Este segment tree te permite responder en un rango cuántos elementos k cumplen tq: x <= k <= y
-
-struct SegmentTree{
-    int n;
-    vl A;
-    ll elemNeutro;
-
-    vector<vl> B;
-
-    SegmentTree(int N, vl &a, ll neutro) : n(N), A(a), elemNeutro(neutro){
-        B.resize(4*n);
-        build(1, 0, n-1);
-    }
-	
-	// # elementos <= x
-	
-    ll f(int v, ll x){
-        //~ ll res = B[v].order_of_key({x+1, -1});
-        ll res = upper_bound(all(B[v]), x) - B[v].begin();
-        //~ ll res = 0;
-        return res;
-    }
-
-    void build(int v, int tl, int tr){ // Vértice actual y rango [tl, tr] que indica este vértice
-        if (tl == tr) B[v].pb(A[tl]);
-        if (tl < tr) {
-            int tm = (tl + tr)/2;
-            build(2*v, tl, tm);
-            build(2*v+1, tm+1, tr); 
-            
-            merge(all(B[2*v]), all(B[2*v+1]), back_inserter(B[v]));
-        }
-    }
-
-    // query(1, 0, n-1, l, r)
-    ll query(int v, int tl, int tr, int l, int r, ll x){
-        if (l > r) return elemNeutro; 
-        if (l == tl && r == tr) return f(v, x); // Respondo la query en este rango
-        int tm = (tl+tr)/2;
-        return query(2*v, tl, tm, l, min(r, tm), x) + query(2*v+1, tm+1, tr, max(l, tm+1), r, x);
-    }
-};
-
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int n, q;
-	cin >> n >> q;
+	int t;
+	cin >> t;
 	
-	vl A(n);
-	forn(i, n) cin >> A[i];
-	
-	SegmentTree S(n, A, 0);
-	
-	forn(_, q){
-		int a, b, c, d;
-		cin >> a >> b >> c >> d;
-		a--; b--;
+	forn(_, t){
+		int n, x;
+		cin >> n >> x;
 		
-		ll res = S.query(1, 0, n-1, a, b, d) - S.query(1, 0, n-1, a, b, c-1);
-		cout << res << "\n";
+		string s;
+		cin >> s;
+		
+		int walls = 0;
+		int leftWall = 0, rightWall = 0;
+		
+		forn(i, n) walls += (s[i] == '#');
+		forn(i, x-1){
+			if (s[i] == '#') leftWall = i+1;
+		}
+		
+		forsn(i, x, n){
+			if (s[i] == '#'){
+				rightWall = i+1;
+				break;
+			}
+		}
+		
+		if (walls == 0 || x == 1 || x == n) {
+			cout << 1 << "\n";
+			continue;
+		}
+		
+		if (leftWall == 0) { leftWall = x-1;}
+		if (rightWall == 0) {rightWall = x+1;}
+		
+		if (walls == 1){
+			cout << min(leftWall, n+1-rightWall) + 1 << "\n";
+		} else {
+			int res;
+			if (leftWall <= n+1-rightWall) res = min(x, n+1-rightWall+1);
+			else res = min(n+1-x, leftWall+1);			
+			cout << res << "\n";
+		}				
 	}
 	
     return 0;

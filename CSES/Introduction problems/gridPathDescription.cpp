@@ -7,7 +7,7 @@ using vi = vector<int>;
 using vb = vector<bool>;
 
 const ll UNDEFINED = -1;
-const int MAX_N = 1e5 + 1;
+//~ const int MAX_N = 1e5 + 1;
 const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
@@ -61,46 +61,52 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-int n;
+const int MAX_N = 7;
+bool visited[MAX_N][MAX_N];
+string s;
 
-void solve(vector<vi> &A, int i, int j){
-	int res = 0;
-	
-	vi mex(3*n+10, false);
-	// Fila i, columna j
-	forn(col, j) mex[A[i][col]] = true;
-	forn(row, i) mex[A[row][j]] = true;
-	
-	forn(k, SIZE(mex)){
-		if (!mex[k]){
-			res = k;
-			break;
-		}
-	}
-	
-	A[i][j] = res;
+bool puedoEstar(int i, int j){ // Si puedo ir a (i, j)
+	return !(i < 0 || i >= 7 || j < 0 || j >= 7 || visited[i][j]);
 }
 
+int bt(int i, int j, int pos){
+	if (!puedoEstar(i, j)) return 0; // Posición invalida o ya visitada
+	if (i == 6 && j == 0 && pos != 48) return 0; // Llegué antes de visitar todas las casillas
+	if (i == 6 && j == 0 && pos == 48) return 1;
+	
+	// Si solo puedo moverme izquierda/derecha o arriba/abajo entonces termino
+	if (puedoEstar(i+1, j) && puedoEstar(i-1, j) && !puedoEstar(i, j-1) && !puedoEstar(i, j+1)) return 0;
+	if (!puedoEstar(i+1, j) && !puedoEstar(i-1, j) && puedoEstar(i, j-1) && puedoEstar(i, j+1)) return 0;
+	
+	int res = 0;
+	visited[i][j] = true;
+	
+	if (s[pos] == '?'){
+		res = bt(i+1, j, pos+1);
+		res += bt(i-1, j, pos+1);
+		res += bt(i, j-1, pos+1);
+		res += bt(i, j+1, pos+1);
+	} else if (s[pos] == 'D') res = bt(i+1, j, pos+1);
+	else if (s[pos] == 'U') res = bt(i-1, j, pos+1);
+	else if (s[pos] == 'L') res = bt(i, j-1, pos+1);
+	else res = bt(i, j+1, pos+1);
+	
+	visited[i][j] = false;
+	return res;
+}
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	cin >> n;
+	cin >> s;
 	
-	vector<vi> A(n, vi(n));
-	forn(i, n) A[0][i] = i;
-	forn(i, n) A[i][0] = i;
+	//~ DBG(s);
 	
-	forsn(i, 1, n){
-		forsn(j, 1, n) solve(A, i, j);
-	}
-	
-	forn(i, n){
-		forn(j, n) cout << A[i][j] << " ";
-		cout << "\n";
-	}
+	forn(i, MAX_N) {forn(j, MAX_N) visited[i][j] = false; }
+	int res = bt(0, 0, 0);
+	cout << res << "\n";
 	
     return 0;
 }

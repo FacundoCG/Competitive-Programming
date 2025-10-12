@@ -68,71 +68,46 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-// Segment tree donde guardo los elementos de cada rango en los vértice de forma ordenada
-// Este segment tree te permite responder en un rango cuántos elementos k cumplen tq: x <= k <= y
+ll memo[61][2][62];
+ll n;
 
-struct SegmentTree{
-    int n;
-    vl A;
-    ll elemNeutro;
-
-    vector<vl> B;
-
-    SegmentTree(int N, vl &a, ll neutro) : n(N), A(a), elemNeutro(neutro){
-        B.resize(4*n);
-        build(1, 0, n-1);
-    }
+ll dp(int i, int j, int k){
+	if (i == -1) return k;
 	
-	// # elementos <= x
+	if (memo[i][j][k] == UNDEFINED){
+		if (j == 0) memo[i][j][k] = dp(i-1, j, k) + dp(i-1, j, k+1);
+		else {
+			if ((1ll << i) & n) memo[i][j][k] = dp(i-1, j, k+1) + dp(i-1, 0, k);
+			else memo[i][j][k] = dp(i-1, j, k);
+		}
+	}
 	
-    ll f(int v, ll x){
-        //~ ll res = B[v].order_of_key({x+1, -1});
-        ll res = upper_bound(all(B[v]), x) - B[v].begin();
-        //~ ll res = 0;
-        return res;
-    }
-
-    void build(int v, int tl, int tr){ // Vértice actual y rango [tl, tr] que indica este vértice
-        if (tl == tr) B[v].pb(A[tl]);
-        if (tl < tr) {
-            int tm = (tl + tr)/2;
-            build(2*v, tl, tm);
-            build(2*v+1, tm+1, tr); 
-            
-            merge(all(B[2*v]), all(B[2*v+1]), back_inserter(B[v]));
-        }
-    }
-
-    // query(1, 0, n-1, l, r)
-    ll query(int v, int tl, int tr, int l, int r, ll x){
-        if (l > r) return elemNeutro; 
-        if (l == tl && r == tr) return f(v, x); // Respondo la query en este rango
-        int tm = (tl+tr)/2;
-        return query(2*v, tl, tm, l, min(r, tm), x) + query(2*v+1, tm+1, tr, max(l, tm+1), r, x);
-    }
-};
+	return memo[i][j][k];
+}
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int n, q;
-	cin >> n >> q;
+	cin >> n;
 	
-	vl A(n);
-	forn(i, n) cin >> A[i];
-	
-	SegmentTree S(n, A, 0);
-	
-	forn(_, q){
-		int a, b, c, d;
-		cin >> a >> b >> c >> d;
-		a--; b--;
-		
-		ll res = S.query(1, 0, n-1, a, b, d) - S.query(1, 0, n-1, a, b, c-1);
-		cout << res << "\n";
+	int index = UNDEFINED;
+	dforn(i, 60){
+		if ((1ll << i) & n){
+			index = i;
+			break;
+		}
 	}
 	
+	forn(i, 61){
+		forn(j, 62){
+			memo[i][0][j] = UNDEFINED;
+			memo[i][1][j] = UNDEFINED;
+		}
+	}
+	
+	ll res = dp(index-1, 0, 0) + dp(index-1, 1, 1);
+	cout << res << "\n";
     return 0;
 }

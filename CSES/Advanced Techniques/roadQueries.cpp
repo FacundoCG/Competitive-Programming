@@ -4,14 +4,8 @@ using namespace std;
 typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
-using vvi = vector<vi>;
 using vb = vector<bool>;
-using vvb = vector<vb>;
 using vl = vector<ll>;
-using ii = pair<int,int>;
-
-template <typename T>
-using vv = vector<vector<T>>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -68,70 +62,69 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-// Segment tree donde guardo los elementos de cada rango en los vértice de forma ordenada
-// Este segment tree te permite responder en un rango cuántos elementos k cumplen tq: x <= k <= y
+struct DisjointSet{
+    vector<ll> parent, rnk;
+    ll numOfComponents;
 
-struct SegmentTree{
-    int n;
-    vl A;
-    ll elemNeutro;
-
-    vector<vl> B;
-
-    SegmentTree(int N, vl &a, ll neutro) : n(N), A(a), elemNeutro(neutro){
-        B.resize(4*n);
-        build(1, 0, n-1);
-    }
-	
-	// # elementos <= x
-	
-    ll f(int v, ll x){
-        //~ ll res = B[v].order_of_key({x+1, -1});
-        ll res = upper_bound(all(B[v]), x) - B[v].begin();
-        //~ ll res = 0;
-        return res;
+    DisjointSet(ll n){
+        rnk.assign(n, 0);
+        for (ll i = 0; i < n; i++)
+            parent.push_back(i);
+        numOfComponents = n;
     }
 
-    void build(int v, int tl, int tr){ // Vértice actual y rango [tl, tr] que indica este vértice
-        if (tl == tr) B[v].pb(A[tl]);
-        if (tl < tr) {
-            int tm = (tl + tr)/2;
-            build(2*v, tl, tm);
-            build(2*v+1, tm+1, tr); 
-            
-            merge(all(B[2*v]), all(B[2*v+1]), back_inserter(B[v]));
+    ll findSet(ll x){
+        if(parent[x]!=x) {parent[x] = findSet(parent[x]);}
+        return parent[x];
+    }
+
+    void unionSet(ll x, ll y){
+        // Encontrar los representantes del conjunto.
+        x = findSet(x);
+        y = findSet(y);
+
+        // Si los conjuntos son disjuntos:
+        if (x != y){
+            // Pongo al que tiene menos rango por debajo del de mayor rango.
+            if (rnk[x] < rnk[y]){
+                parent[x] = y;
+            } else if (rnk[x] > rnk[y]){
+                parent[y] = x;
+            } else {  // Si tienen el mismo rango, incremento del rango.  (rnk[x] == rnk[y])
+                parent[y] = x;
+                rnk[x]++;
+            }
+            numOfComponents--;
         }
     }
 
-    // query(1, 0, n-1, l, r)
-    ll query(int v, int tl, int tr, int l, int r, ll x){
-        if (l > r) return elemNeutro; 
-        if (l == tl && r == tr) return f(v, x); // Respondo la query en este rango
-        int tm = (tl+tr)/2;
-        return query(2*v, tl, tm, l, min(r, tm), x) + query(2*v+1, tm+1, tr, max(l, tm+1), r, x);
+    bool same(ll x, ll y){
+        return findSet(x) == findSet(y);
     }
 };
+
+typedef pair<int, int> Edge;
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int n, q;
-	cin >> n >> q;
+	int n, m, q;
+	cin >> n >> m >> q;
 	
-	vl A(n);
-	forn(i, n) cin >> A[i];
+	vector<Edge> edges;
+	forn(i, m){
+		int v, u;
+		cin >> v >> u;
+		v--; u--;
+		edges.pb({v, u});
+	}
 	
-	SegmentTree S(n, A, 0);
-	
-	forn(_, q){
-		int a, b, c, d;
-		cin >> a >> b >> c >> d;
-		a--; b--;
-		
-		ll res = S.query(1, 0, n-1, a, b, d) - S.query(1, 0, n-1, a, b, c-1);
-		cout << res << "\n";
+	forn(i, q){
+		int v, u;
+		cin >> v >> u;
+		v--; u--;
 	}
 	
     return 0;

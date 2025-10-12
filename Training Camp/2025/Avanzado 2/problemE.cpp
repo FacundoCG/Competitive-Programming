@@ -5,6 +5,7 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -26,7 +27,7 @@ const double PI = acos(-1.0);
 #define RAYA cerr << "----------" << endl
 
 #define forn(i,n) for (int i=0;i<(int)(n);i++)
-#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define forsn(i,s,n) for (ll i=(s);i<(ll)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
 
@@ -61,45 +62,62 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-int n;
-
-void solve(vector<vi> &A, int i, int j){
+int calculatePotencia(ll &a, ll b){
 	int res = 0;
 	
-	vi mex(3*n+10, false);
-	// Fila i, columna j
-	forn(col, j) mex[A[i][col]] = true;
-	forn(row, i) mex[A[row][j]] = true;
-	
-	forn(k, SIZE(mex)){
-		if (!mex[k]){
-			res = k;
-			break;
-		}
+	while (a % b == 0){
+		a /= b;
+		res++;
 	}
 	
-	A[i][j] = res;
+	return res;
 }
 
+vector<ll> divisoresOf(ll a){
+    vector<ll> res;
+    int until = sqrt(a) + 1;
+    forsn(i, 1, until){
+        if (a % i == 0) res.pb(i);
+        if (a % i == 0 && i != a/i) res.pb(a/i);
+    }
+    
+    sort(all(res));
+
+    return res;
+}
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	cin >> n;
+	int t;
+	cin >> t;
 	
-	vector<vi> A(n, vi(n));
-	forn(i, n) A[0][i] = i;
-	forn(i, n) A[i][0] = i;
-	
-	forsn(i, 1, n){
-		forsn(j, 1, n) solve(A, i, j);
-	}
-	
-	forn(i, n){
-		forn(j, n) cout << A[i][j] << " ";
-		cout << "\n";
+	forn(_, t){
+		ll p, q;
+		cin >> p >> q;
+		
+		if (p % q != 0){
+			cout << p << "\n";
+		} else {
+			vl divisorsOfQ = divisoresOf(q);
+			ll res = 1;
+			ll currentQ = q;
+				
+			for (ll d : divisorsOfQ){
+				if (d == 1) continue;
+				int potenciaQ = calculatePotencia(currentQ, d);
+				if (potenciaQ == 0) continue; 
+				
+				ll currentRes = p;
+				while (currentRes % d == 0) currentRes /= d;
+				forn(i, potenciaQ-1) currentRes *= d;
+				res = max(res, currentRes);
+			}
+				
+			cout << res << "\n";
+		}	
 	}
 	
     return 0;

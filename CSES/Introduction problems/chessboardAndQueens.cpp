@@ -63,17 +63,7 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 string board[8];
 bool colVisited[8];
-bool diagonalUsed[14];
-
-int diagonal(int row, int column){
-	// Todo inicio de diagonal D que se mueve hacia derecha cumple que: row <= column para todo elemento de la diagonal
-	if (row <= column) return column - row;
-	
-	// Si la diagonal va hacia izq pasa lo contrario: column < row
-	return row + column;
-	
-	// Tengo que llevar a row a 0
-}
+bool diag1[30], diag2[30];
 
 int bt(int currentRow){
 	if (currentRow == 8) return 1;
@@ -81,14 +71,10 @@ int bt(int currentRow){
 	int res = 0;
 	
 	forn(i, 8){
-		if (colVisited[i] || board[currentRow][i] == '*') continue;
-		int currentDiagonal = diagonal(currentRow, i);
-		if (diagonalUsed[currentDiagonal]) continue;
-		diagonalUsed[currentDiagonal] = true;
-		colVisited[i] = true;
+		if (colVisited[i] || board[currentRow][i] == '*' || diag1[i+currentRow] || diag2[i-currentRow+7]) continue;
+		colVisited[i] = diag1[i+currentRow] = diag2[i-currentRow+7] = true;
 		res += bt(currentRow+1);
-		colVisited[i] = false;
-		diagonalUsed[currentDiagonal] = false;
+		colVisited[i] = diag1[i+currentRow] = diag2[i-currentRow+7] = false;
 	}
 	
 	return res;
@@ -101,7 +87,7 @@ int main()
 	
 	forn(i, 8) cin >> board[i];
 	forn(i, 8) colVisited[i] = false;
-	forn(i, 14) diagonalUsed[i] = false;
+	forn(i, 30) diag1[i] = diag2[i] = false;
 	
 	int res = bt(0);
 	cout << res << "\n";

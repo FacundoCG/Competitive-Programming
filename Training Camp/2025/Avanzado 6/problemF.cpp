@@ -5,6 +5,7 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -61,46 +62,60 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-int n;
-
-void solve(vector<vi> &A, int i, int j){
-	int res = 0;
-	
-	vi mex(3*n+10, false);
-	// Fila i, columna j
-	forn(col, j) mex[A[i][col]] = true;
-	forn(row, i) mex[A[row][j]] = true;
-	
-	forn(k, SIZE(mex)){
-		if (!mex[k]){
-			res = k;
-			break;
-		}
-	}
-	
-	A[i][j] = res;
-}
-
-
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	cin >> n;
+	int t;
+	cin >> t;
 	
-	vector<vi> A(n, vi(n));
-	forn(i, n) A[0][i] = i;
-	forn(i, n) A[i][0] = i;
-	
-	forsn(i, 1, n){
-		forsn(j, 1, n) solve(A, i, j);
+	forn(_, t){
+		string s;
+		cin >> s;
+		
+		map<char, int> repeticiones;
+		vector<pair<int, char>> A;
+		
+		forn(i, SIZE(s)) repeticiones[s[i]]++;
+		for (auto p : repeticiones) A.pb({p.snd, p.fst});
+		
+		sort(all(A));
+		
+		if (SIZE(A) == 1){
+			if (A[0].fst > 1) cout << "NO\n";
+			else {
+				cout << "YES\n";
+				cout << s << "\n";
+			}
+		} else if (SIZE(A) == 2){
+			if (A[0].fst >= 2 && A[1].fst >= 2){ 
+				cout << "NO\n";
+			} else {
+				string res = "";
+				forn(i, A[0].fst) res += A[0].snd;
+				forn(i, A[1].fst) res += A[1].snd;
+				cout << "YES\n";
+				cout << res << "\n";
+			}
+		} else {
+			string res = ""; // ABCDEAA
+			// AAB
+			
+			forn(j, SIZE(s)){
+				dforn(i, SIZE(A)){
+					if (A[i].fst > 0){
+						res += A[i].snd;
+						A[i].fst--;
+					}
+				}
+			}
+			
+			cout << "YES\n";
+			cout << res << "\n";
+		}
 	}
 	
-	forn(i, n){
-		forn(j, n) cout << A[i][j] << " ";
-		cout << "\n";
-	}
 	
     return 0;
 }

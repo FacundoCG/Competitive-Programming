@@ -68,49 +68,69 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-// Segment tree donde guardo los elementos de cada rango en los vértice de forma ordenada
-// Este segment tree te permite responder en un rango cuántos elementos k cumplen tq: x <= k <= y
+int leftBinarySearch(int start, int end, vi &A, int x){
+    int l = start - 1; 
+    int r = end + 1; 
+
+    while(r - l > 1) { 
+        //int mid = (l + r) / 2;
+        int mid = l + (r-l)/2;
+
+        if(!(A[mid] > x)) l = mid;
+        else r = mid;
+    }
+    
+    if (r < start || r > end || !(A[r] > x)) r = -1; // Si r no está en el intervalo [start,end] o no cumple la propiedad, entonces retorno -1
+    return r; // r es el primer elemento que cumple P(X)
+}
 
 struct SegmentTree{
     int n;
-    vl A;
-    ll elemNeutro;
+    vi A;
+    pair<int, int> elemNeutro;
+    vector<vi> B;
 
-    vector<vl> B;
-
-    SegmentTree(int N, vl &a, ll neutro) : n(N), A(a), elemNeutro(neutro){
+    SegmentTree(int N, vi &a, pair<int, int> neutro) : n(N), A(a), elemNeutro(neutro){
         B.resize(4*n);
         build(1, 0, n-1);
     }
-	
-	// # elementos <= x
-	
-    ll f(int v, ll x){
-        //~ ll res = B[v].order_of_key({x+1, -1});
-        ll res = upper_bound(all(B[v]), x) - B[v].begin();
-        //~ ll res = 0;
-        return res;
+
+    pair<int, int> f(int v, int x){
+		pair<int, int> res = {0, B[v].back()};
+		int j = leftBinarySearch(0, SIZE(B[v])-1, B[v], x);
+		if (j != UNDEFINED) res.fst += SIZE(B[v]) - j; // Quiero ver cuál es el primer elemento de B[v] que es > x		
+		return res;
     }
+    
+    pair<int, int> combine(pair<int, int> p1, pair<int, int> p2){
+		return {p1.fst + p2.fst, max(p1.snd, p2.snd)};
+	}
 
     void build(int v, int tl, int tr){ // Vértice actual y rango [tl, tr] que indica este vértice
-        if (tl == tr) B[v].pb(A[tl]);
+		B[v].pb(A[tl]);
+        forsn(i, tl+1, tr+1) {
+			if (A[i] > B[v].back()) B[v].pb(A[i]);
+        }
+        
         if (tl < tr) {
             int tm = (tl + tr)/2;
             build(2*v, tl, tm);
             build(2*v+1, tm+1, tr); 
-            
-            merge(all(B[2*v]), all(B[2*v+1]), back_inserter(B[v]));
         }
     }
 
     // query(1, 0, n-1, l, r)
-    ll query(int v, int tl, int tr, int l, int r, ll x){
+    pair<int, int> query(int v, int tl, int tr, int l, int r, int x){
         if (l > r) return elemNeutro; 
         if (l == tl && r == tr) return f(v, x); // Respondo la query en este rango
         int tm = (tl+tr)/2;
-        return query(2*v, tl, tm, l, min(r, tm), x) + query(2*v+1, tm+1, tr, max(l, tm+1), r, x);
+        
+        pair<int, int> res = query(2*v, tl, tm, l, min(r, tm), x);
+        res = combine(res, query(2*v+1, tm+1, tr, max(l, tm+1), r, max(res.snd, x)));
+        return res;
     }
 };
+
 
 int main()
 {
@@ -120,18 +140,16 @@ int main()
 	int n, q;
 	cin >> n >> q;
 	
-	vl A(n);
+	vi A(n);
 	forn(i, n) cin >> A[i];
 	
-	SegmentTree S(n, A, 0);
+	SegmentTree T(n, A, {0, 0});
 	
 	forn(_, q){
-		int a, b, c, d;
-		cin >> a >> b >> c >> d;
-		a--; b--;
-		
-		ll res = S.query(1, 0, n-1, a, b, d) - S.query(1, 0, n-1, a, b, c-1);
-		cout << res << "\n";
+		int l, r;
+		cin >> l >> r;
+		l--; r--;
+		cout << T.query(1, 0, n-1, l, r, 0).fst << "\n";
 	}
 	
     return 0;

@@ -5,6 +5,7 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -26,7 +27,7 @@ const double PI = acos(-1.0);
 #define RAYA cerr << "----------" << endl
 
 #define forn(i,n) for (int i=0;i<(int)(n);i++)
-#define forsn(i,s,n) for (int i=(s);i<(int)(n);i++)
+#define forsn(i,s,n) for (ll i=(s);i<(ll)(n);i++)
 #define dforn(i,n) for(int i=(int)((n)-1);i>=0;i--)
 #define dforsn(i,s,n) for(int i=(int)((n)-1);i>=(int)(s);i--)
 
@@ -61,46 +62,27 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-int n;
-
-void solve(vector<vi> &A, int i, int j){
-	int res = 0;
-	
-	vi mex(3*n+10, false);
-	// Fila i, columna j
-	forn(col, j) mex[A[i][col]] = true;
-	forn(row, i) mex[A[row][j]] = true;
-	
-	forn(k, SIZE(mex)){
-		if (!mex[k]){
-			res = k;
-			break;
-		}
-	}
-	
-	A[i][j] = res;
-}
-
-
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
+	int n;
 	cin >> n;
-	
-	vector<vi> A(n, vi(n));
-	forn(i, n) A[0][i] = i;
-	forn(i, n) A[i][0] = i;
-	
-	forsn(i, 1, n){
-		forsn(j, 1, n) solve(A, i, j);
+		
+	vl A(n);
+	forn(i, n) cin >> A[i];
+		
+	ll res = A[n-1];
+	ll lastElem = A[n-1];
+		
+	dforn(i, n-1) {
+		if (lastElem == 1) break;
+		res += min(lastElem-1, A[i]);
+		lastElem = min(lastElem-1, A[i]);
 	}
 	
-	forn(i, n){
-		forn(j, n) cout << A[i][j] << " ";
-		cout << "\n";
-	}
+	cout << res << "\n";
 	
     return 0;
 }

@@ -5,6 +5,7 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using vl = vector<ll>;
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -61,45 +62,23 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-int n;
-
-void solve(vector<vi> &A, int i, int j){
-	int res = 0;
-	
-	vi mex(3*n+10, false);
-	// Fila i, columna j
-	forn(col, j) mex[A[i][col]] = true;
-	forn(row, i) mex[A[row][j]] = true;
-	
-	forn(k, SIZE(mex)){
-		if (!mex[k]){
-			res = k;
-			break;
-		}
-	}
-	
-	A[i][j] = res;
-}
-
-
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	cin >> n;
+	int t;
+	cin >> t;
 	
-	vector<vi> A(n, vi(n));
-	forn(i, n) A[0][i] = i;
-	forn(i, n) A[i][0] = i;
-	
-	forsn(i, 1, n){
-		forsn(j, 1, n) solve(A, i, j);
-	}
-	
-	forn(i, n){
-		forn(j, n) cout << A[i][j] << " ";
-		cout << "\n";
+	forn(_, t){
+		int n, m;
+		cin >> n >> m;
+		
+		if (n == 1 || m == 1 || (n == 2 && m == 2)){
+			cout << "No\n";
+		} else {
+			cout << "Yes\n";
+		}
 	}
 	
     return 0;

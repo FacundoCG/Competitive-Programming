@@ -5,6 +5,8 @@ typedef long long ll;
 typedef long double ld;
 using vi = vector<int>;
 using vb = vector<bool>;
+using ii = pair<int,int>;
+
 
 const ll UNDEFINED = -1;
 const int MAX_N = 1e5 + 1;
@@ -63,23 +65,53 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 int n;
 
-void solve(vector<vi> &A, int i, int j){
-	int res = 0;
+struct Solver{
+	int n;
+	vector<vi> res;
+	vector<vb> visited;
 	
-	vi mex(3*n+10, false);
-	// Fila i, columna j
-	forn(col, j) mex[A[i][col]] = true;
-	forn(row, i) mex[A[row][j]] = true;
-	
-	forn(k, SIZE(mex)){
-		if (!mex[k]){
-			res = k;
-			break;
-		}
+	Solver(int N) : n(N){
+		res.resize(n, vi(n, 0));
+		visited.resize(n, vb(n, false));
 	}
 	
-	A[i][j] = res;
-}
+	void update(int i, int j, queue<ii> &q, int distance){
+		if (i < 0 || j < 0 || i >= n || j >= n) return ;
+		if (visited[i][j]) return ; // Ya fue visitada la casilla
+		res[i][j] = distance;
+		visited[i][j] = true;
+		q.push({i, j});
+	}
+	
+	void solve(){
+		visited[0][0] = true;
+		queue<ii> q;
+		q.push({0, 0});
+		
+		while (!q.empty()){
+			ii v = q.front(); q.pop();
+			int i = v.fst, j = v.snd;
+			int distance = res[i][j] + 1;
+			
+			// Estoy en (i, j)
+			
+			update(i-2, j-1, q, distance); 
+			update(i-2, j+1, q, distance); 
+			update(i+2, j-1, q, distance); 
+			update(i+2, j+1, q, distance); 
+			
+			update(i-1, j-2, q, distance); 
+			update(i-1, j+2, q, distance); 
+			update(i+1, j-2, q, distance); 
+			update(i+1, j+2, q, distance); 
+		}
+		
+		forn(i, n){
+			forn(j, n) cout << res[i][j] << " ";
+			cout << "\n";
+		}
+	}
+};
 
 
 int main()
@@ -89,18 +121,8 @@ int main()
 	
 	cin >> n;
 	
-	vector<vi> A(n, vi(n));
-	forn(i, n) A[0][i] = i;
-	forn(i, n) A[i][0] = i;
-	
-	forsn(i, 1, n){
-		forsn(j, 1, n) solve(A, i, j);
-	}
-	
-	forn(i, n){
-		forn(j, n) cout << A[i][j] << " ";
-		cout << "\n";
-	}
+	Solver S(n);
+	S.solve();
 	
     return 0;
 }

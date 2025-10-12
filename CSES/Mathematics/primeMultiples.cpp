@@ -68,47 +68,51 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-// Segment tree donde guardo los elementos de cada rango en los vértice de forma ordenada
-// Este segment tree te permite responder en un rango cuántos elementos k cumplen tq: x <= k <= y
-
-struct SegmentTree{
-    int n;
+struct InclusionExclusion{
+    ll k, n;
     vl A;
-    ll elemNeutro;
 
-    vector<vl> B;
+    InclusionExclusion(ll K, ll N, vl &a) : k(K), n(N), A(a) {}
 
-    SegmentTree(int N, vl &a, ll neutro) : n(N), A(a), elemNeutro(neutro){
-        B.resize(4*n);
-        build(1, 0, n-1);
-    }
-	
-	// # elementos <= x
-	
-    ll f(int v, ll x){
-        //~ ll res = B[v].order_of_key({x+1, -1});
-        ll res = upper_bound(all(B[v]), x) - B[v].begin();
-        //~ ll res = 0;
+    // Quiero ver la # elementos que cumplen P(x) en la unión de los conjuntos: A[0], A[1], ..., A[k-1]
+    int amountOfSets(ll mask){
+        int res = 0;
+        while (mask > 0){
+            res += (mask & 1);
+            mask = mask >> 1;
+        }
         return res;
     }
 
-    void build(int v, int tl, int tr){ // Vértice actual y rango [tl, tr] que indica este vértice
-        if (tl == tr) B[v].pb(A[tl]);
-        if (tl < tr) {
-            int tm = (tl + tr)/2;
-            build(2*v, tl, tm);
-            build(2*v+1, tm+1, tr); 
-            
-            merge(all(B[2*v]), all(B[2*v+1]), back_inserter(B[v]));
-        }
-    }
+    ll sizeIntersection(ll mask){
+        ll res = 0;
+        ll divisor = 1;
+        int j = 0;
 
-    // query(1, 0, n-1, l, r)
-    ll query(int v, int tl, int tr, int l, int r, ll x){
-        if (l > r) return elemNeutro; 
-        if (l == tl && r == tr) return f(v, x); // Respondo la query en este rango
-        int tm = (tl+tr)/2;
-        return query(2*v, tl, tm, l, min(r, tm), x) + query(2*v+1, tm+1, tr, max(l, tm+1), r, x);
+        while (mask > 0){
+            if (mask & 1){
+				if (divisor > n/A[j]){
+					divisor = 0;
+					break;
+				} else { divisor *= A[j];}
+            }
+            j++;
+            mask = mask >> 1;
+        }
+
+        if (divisor > 0) res += n/divisor;
+        return res;
+    }
+    
+    ll solve(){
+        ll res = 0;
+        ll cota = 1ll << k;
+        forsn(mask, 1, cota){
+            ll sizeSet = amountOfSets(mask);
+            if (sizeSet % 2 == 0) res -= sizeIntersection(mask);
+            else res += sizeIntersection(mask);
+        }
+        return res;
     }
 };
 
@@ -117,22 +121,15 @@ int main()
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int n, q;
-	cin >> n >> q;
+	ll n, k;
+	cin >> n >> k;
 	
-	vl A(n);
-	forn(i, n) cin >> A[i];
+	vl A(k);
+	forn(i, k) cin >> A[i];
 	
-	SegmentTree S(n, A, 0);
-	
-	forn(_, q){
-		int a, b, c, d;
-		cin >> a >> b >> c >> d;
-		a--; b--;
-		
-		ll res = S.query(1, 0, n-1, a, b, d) - S.query(1, 0, n-1, a, b, c-1);
-		cout << res << "\n";
-	}
+	InclusionExclusion P(k, n, A);
+	ll res = P.solve();
+	cout << res << "\n";
 	
     return 0;
 }

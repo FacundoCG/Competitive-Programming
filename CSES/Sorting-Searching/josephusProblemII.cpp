@@ -61,24 +61,39 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-int n;
+#include <ext/pb_ds/assoc_container.hpp> 
+#include <ext/pb_ds/tree_policy.hpp> 
+using namespace __gnu_pbds; 
 
-void solve(vector<vi> &A, int i, int j){
-	int res = 0;
+#define ordered_set tree<int, null_type,less<int>, rb_tree_tag,tree_order_statistics_node_update> 
+
+int n, k;
+
+int elementToJump(ordered_set &s, int newPosition){
+	if (SIZE(s) <= newPosition) newPosition = newPosition - SIZE(s);
+	return *s.find_by_order(newPosition);
+}
+
+void solve(){
+	ordered_set s;
+	forsn(i, 1, n+1) s.insert(i);
 	
-	vi mex(3*n+10, false);
-	// Fila i, columna j
-	forn(col, j) mex[A[i][col]] = true;
-	forn(row, i) mex[A[row][j]] = true;
+	vi res;
 	
-	forn(k, SIZE(mex)){
-		if (!mex[k]){
-			res = k;
-			break;
-		}
-	}
+	int currentElement = 1;
 	
-	A[i][j] = res;
+	while (!s.empty()){
+		// Estoy parado en la posición i. Quiero borrar la i+k, y mover a i+k+1		
+		int salto = k % SIZE(s);
+		int i = s.order_of_key(currentElement);
+		int aBorrar = elementToJump(s, i+salto);
+		currentElement = elementToJump(s, i+salto+1);
+		s.erase(aBorrar);
+		res.pb(aBorrar);
+	} 
+	
+	for(int v : res) cout << v << " ";
+	cout << "\n";
 }
 
 
@@ -87,20 +102,8 @@ int main()
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	cin >> n;
-	
-	vector<vi> A(n, vi(n));
-	forn(i, n) A[0][i] = i;
-	forn(i, n) A[i][0] = i;
-	
-	forsn(i, 1, n){
-		forsn(j, 1, n) solve(A, i, j);
-	}
-	
-	forn(i, n){
-		forn(j, n) cout << A[i][j] << " ";
-		cout << "\n";
-	}
+	cin >> n >> k;
+	solve();
 	
     return 0;
 }

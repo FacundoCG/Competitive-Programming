@@ -80,8 +80,8 @@ ll dp(int i, int j, int k){ // i es la columna actual, j la fila y k la bitmask 
 	if (j == n) return dp(i+1, 0, k); // Si terminé la última fila, ahora me muevo a la siguiente columna
 	
 	if (memo[i][j][k] == UNDEFINED){
-		int a = 1 << j; // I need to check what was the bit at the position j of k.
-		int b = 1 << (j+1);
+		int a = 1 << j; // Me fijo que bit había en la fila j en la columna i-1
+		int b = 1 << (j+1); // Me fijo que bit había en la fila j+1 en la columna i-1
 		
 		if (k & a){ // Si estaba prendido el bit j en esta posición quiere decir que había un bloque horizontal. Luego, esta posición está ocupada y no puedo hacer nada
 			memo[i][j][k] = dp(i, j+1, k & (~a)); // Apago el bit j del vector k y me voy una fila para abajo

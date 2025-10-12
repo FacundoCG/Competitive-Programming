@@ -73,6 +73,21 @@ using ordered_multiset = tree<
     tree_order_statistics_node_update
 >;
 
+int indexOfMedian;
+ll leftLen, rightLen, leftSum, rightSum;
+
+ll get_answer(ordered_multiset<ll> &s){
+	ll median = (*s.find_by_order(indexOfMedian)).fst;
+	ll res = (leftLen*median - leftSum) + (rightSum - rightLen*median);
+	return res;
+}
+
+void update(int indexOf, ll v, int s){
+	if (indexOf < indexOfMedian) leftSum += v*s;
+	else if (indexOf > indexOfMedian) rightSum += v*s;
+}
+
+
 int main() {
     ios :: sync_with_stdio(0);
     cin.tie(0);
@@ -80,32 +95,83 @@ int main() {
     int n, k;
     cin >> n >> k;
     
-    vector<int> A(n);
+    vector<ll> A(n);
     forn(i, n) cin >> A[i];
-    ordered_multiset<int> s;
-	ll sum = 0;
-    forn(i, k-1) {
-		s.insert({A[i], i});
-		sum = (ll) sum + A[i];
+    ordered_multiset<ll> s;
+    
+    indexOfMedian = k/2;
+    leftLen = 0, rightLen = 0;
+    leftSum = 0, rightSum = 0;
+    
+    forn(i, k) s.insert({A[i], i});
+    forn(i, k){
+		ll v = (*s.find_by_order(i)).fst;
+		if (i < indexOfMedian){
+			leftLen++;
+			leftSum += v;
+		} else if (i > indexOfMedian){
+			rightLen++;
+			rightSum += v;
+		}
 	}
 	
-	int m = k/2;
-	if (k % 2 == 0) m = k/2 - 1;
-	int indexToErase = 0;
-	
-	forsn(i, k-1, n){
-		s.insert({A[i], i});
-		sum = (ll) sum + A[i];
-		auto it = s.find_by_order(m);
-		int median = (*it).fst;
+	//~ DBG(A); DBG(k);
+	cout << get_answer(s) << " ";
 		
-		// I have to make the k elements equal to media: A[0] + A[1] + ... + A[k-1]
-		// The cost for that is: |median - A[0]| + |median - A[1]| + ... + |median - A[k-1]|
+	forsn(i, k, n){
+		pair<ll, int> toDelete = *s.find({A[i-k], i-k});
+		int indexToDelete = (int) s.order_of_key(toDelete);
 		
+		update(indexToDelete, toDelete.fst, -1);
+		s.erase(toDelete); // Elimino el elemento
 		
-		auto et = s.lower_bound({A[indexToErase], indexToErase});
-		s.erase(et);
-		indexToErase++;
+		// Agrego el nuevo elemento
+		pair<ll, int> toAdd = {A[i], i};
+		s.insert(toAdd);
+		
+		// Tengo que chequear la posición de este elemento
+		int indexToAdd = (int) s.order_of_key(toAdd);
+		update(indexToAdd, toAdd.fst, 1);
+		
+		// [izquierda] - mediana - [derecha]
+		
+		if (indexToDelete < indexOfMedian){
+			if (indexToAdd >= indexOfMedian){
+				// La mediana vieja se fue a la izquierda
+				pair<ll, int> oldMedian = *s.find_by_order(indexOfMedian-1);
+				leftSum += oldMedian.fst;
+			}
+			
+			if (indexToAdd > indexOfMedian){
+				// La mediana nueva viene de la derecha así que le tengo que descontar
+				pair<ll, int> newMedian = *s.find_by_order(indexOfMedian);
+				rightSum -= newMedian.fst;
+			}
+		} else if (indexToDelete > indexOfMedian){
+			if (indexToAdd <= indexOfMedian){
+				// La mediana vieja se fue a la derecha
+				pair<ll, int> oldMedian = *s.find_by_order(indexOfMedian+1);
+				rightSum += oldMedian.fst;
+			}
+			
+			if (indexToAdd < indexOfMedian){
+				// La mediana nueva viene de la izquierda así que le tengo que descontar
+				pair<ll, int> newMedian = *s.find_by_order(indexOfMedian);
+				leftSum -= newMedian.fst;
+			}
+		} else {
+			if (indexToAdd < indexOfMedian){
+				// La mediana nueva viene de la izquierda así que le tengo que descontar
+				pair<ll, int> newMedian = *s.find_by_order(indexOfMedian);
+				leftSum -= newMedian.fst;
+			} else if (indexToAdd > indexOfMedian){
+				// La mediana nueva viene de la derecha así que le tengo que descontar
+				pair<ll, int> newMedian = *s.find_by_order(indexOfMedian);
+				rightSum -= newMedian.fst;
+			}
+		}
+		
+		cout << get_answer(s) << " ";
 	}
 	
 	cout << "\n";

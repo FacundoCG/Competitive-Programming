@@ -62,55 +62,46 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-struct SqrtDescomposition{
-    vl A;
-    vector<vl> descompositionOfA;
-    vl minOfDescomposition;
-    int n, sqrtOfN;
+struct SegmentTree{
+    int n;
+    vl A, B;
+    ll elemNeutro;
 
-    SqrtDescomposition(vl &arr) : A(arr){
-        n = SIZE(arr);
-        sqrtOfN = (int) sqrt(n) + 1;
-        descompositionOfA.resize(sqrtOfN);
-        minOfDescomposition.resize(sqrtOfN, INF);
+    SegmentTree(int N, vl &a, ll neutro) : n(N), A(a), elemNeutro(neutro){
+        B.resize(4*n, elemNeutro);
+        build(1, 0, n-1);
+    }
 
-        forn(i, n) descompositionOfA[i/sqrtOfN].pb(A[i]);
-        
-        forn(i, sqrtOfN){
-            forn(j, SIZE(descompositionOfA[i])) minOfDescomposition[i] = min(minOfDescomposition[i], descompositionOfA[i][j]);
+    ll combine(ll x, ll y){ return min(x, y);}
+    ll make_data(ll x){ return x;}
+
+    void build(int v, int tl, int tr){ // Vértice actual y rango [tl, tr] que indica este vértice
+        if (tl == tr) B[v] = make_data(A[tl]); // Cuando llego a una hoja, el valor es el mismo elemento
+        else {
+            int tm = (tl + tr)/2;
+            build(2*v, tl, tm);
+            build(2*v+1, tm+1, tr); 
+            B[v] = combine(B[2*v], B[2*v+1]);
         }
     }
-    
-    int findBlock(int index){
-		return index/sqrtOfN;
-	}
-	
-	int findIndexInTheBlock(int index){
-		return index % sqrtOfN;
-	}
-    
-    void answerQuery(int l, int r){
-		int blockOfL = findBlock(l), blockOfR = findBlock(r);
-		int indexOfL = findIndexInTheBlock(l), indexOfR = findIndexInTheBlock(r);
-		ll res = INF;
-		
-		if (blockOfL == blockOfR){
-			forsn(i, indexOfL, indexOfR+1) res = min(res, descompositionOfA[blockOfL][i]);
-		} else {
-			forsn(i, indexOfL, SIZE(descompositionOfA[blockOfL])) res = min(res, descompositionOfA[blockOfL][i]);
-			forn(i, indexOfR+1) res = min(res, descompositionOfA[blockOfR][i]);
-			forsn(i, blockOfL+1, blockOfR) res = min(res, minOfDescomposition[i]);
-		}
-		
-		cout << res << "\n";
-	}
-	
-	void updateAt(int l, ll v){
-		int blockOfL = findBlock(l), indexOfL = findIndexInTheBlock(l);
-		descompositionOfA[blockOfL][indexOfL] = v;
-		minOfDescomposition[blockOfL] = INF;
-		forn(i, SIZE(descompositionOfA[blockOfL])) minOfDescomposition[blockOfL] = min(minOfDescomposition[blockOfL], descompositionOfA[blockOfL][i]);
-	}
+
+    // query(1, 0, n-1, l, r)
+    ll query(int v, int tl, int tr, int l, int r){
+        if (l > r) return elemNeutro; 
+        if (l == tl && r == tr) return B[v];
+        int tm = (tl+tr)/2;
+        return combine(query(2*v, tl, tm, l, min(r, tm)), query(2*v+1, tm+1, tr, max(l, tm+1), r));
+    }
+
+    void update(int v, int tl, int tr, int pos, ll new_val){
+        if (tl == tr) B[v] = make_data(new_val);
+        else {
+            int tm = (tl + tr)/2;
+            if (pos <= tm) update(2*v, tl, tm, pos, new_val);
+            else update(2*v+1, tm+1, tr, pos, new_val);
+            B[v] = combine(B[2*v], B[2*v+1]);
+        }
+    }
 };
 
 int main()
@@ -123,17 +114,17 @@ int main()
 	
 	vl A(n);
 	forn(i, n) cin >> A[i];
-	SqrtDescomposition S(A);
+	SegmentTree S(n, A, LINF);
 	
 	forn(_, q){
 		int k, l, r;
 		cin >> k >> l >> r;
 		l--;
 		
-		if (k == 1) S.updateAt(l, r);
+		if (k == 1) S.update(1, 0, n-1, l, r);
 		else {
 			r--; 
-			S.answerQuery(l, r);
+			cout << S.query(1, 0, n-1, l, r) << "\n";
 		}
 	}
 	

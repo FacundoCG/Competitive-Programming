@@ -68,70 +68,104 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-// Segment tree donde guardo los elementos de cada rango en los vértice de forma ordenada
-// Este segment tree te permite responder en un rango cuántos elementos k cumplen tq: x <= k <= y
+// Segment tree básico para point update y range query de suma
+
+struct objeto{
+	ll sum;
+	ll maxPrefix;
+	
+	objeto(){
+		sum = maxPrefix = 0;
+	}
+	
+	objeto(ll s, ll mp) : sum(s), maxPrefix(mp){}
+};
 
 struct SegmentTree{
     int n;
     vl A;
-    ll elemNeutro;
+    vector<objeto> B;
+    objeto elemNeutro;
 
-    vector<vl> B;
-
-    SegmentTree(int N, vl &a, ll neutro) : n(N), A(a), elemNeutro(neutro){
+    SegmentTree(int N, vl &a) : n(N), A(a){
+		elemNeutro = objeto();
         B.resize(4*n);
         build(1, 0, n-1);
     }
+
+    objeto combine(objeto x, objeto y){
+		objeto res;
+		res.sum = x.sum + y.sum;
+		res.maxPrefix = max(x.maxPrefix, x.sum + y.maxPrefix);
+		return res;
+	}
 	
-	// # elementos <= x
-	
-    ll f(int v, ll x){
-        //~ ll res = B[v].order_of_key({x+1, -1});
-        ll res = upper_bound(all(B[v]), x) - B[v].begin();
-        //~ ll res = 0;
-        return res;
-    }
+    objeto make_data(ll x){
+		objeto res;
+		res.sum = x;
+		res.maxPrefix = max(0ll, x);
+		return res;
+	}
 
     void build(int v, int tl, int tr){ // Vértice actual y rango [tl, tr] que indica este vértice
-        if (tl == tr) B[v].pb(A[tl]);
-        if (tl < tr) {
+        if (tl == tr) B[v] = make_data(A[tl]); // Cuando llego a una hoja, el valor es el mismo elemento
+        else {
             int tm = (tl + tr)/2;
             build(2*v, tl, tm);
             build(2*v+1, tm+1, tr); 
-            
-            merge(all(B[2*v]), all(B[2*v+1]), back_inserter(B[v]));
+            B[v] = combine(B[2*v], B[2*v+1]);
         }
     }
 
     // query(1, 0, n-1, l, r)
-    ll query(int v, int tl, int tr, int l, int r, ll x){
+    objeto query(int v, int tl, int tr, int l, int r){
         if (l > r) return elemNeutro; 
-        if (l == tl && r == tr) return f(v, x); // Respondo la query en este rango
-        int tm = (tl+tr)/2;
-        return query(2*v, tl, tm, l, min(r, tm), x) + query(2*v+1, tm+1, tr, max(l, tm+1), r, x);
+        if (l == tl && r == tr) return B[v];
+        int tm = (tl+tr)/2;        
+		return combine(query(2*v, tl, tm, l, min(r, tm)), query(2*v+1, tm+1, tr, max(l, tm+1), r));
+    }
+
+    void update(int v, int tl, int tr, int pos, ll new_val){
+        if (tl == tr) B[v] = make_data(new_val);
+        else {
+            int tm = (tl + tr)/2;
+            if (pos <= tm) update(2*v, tl, tm, pos, new_val);
+            else update(2*v+1, tm+1, tr, pos, new_val);
+            B[v] = combine(B[2*v], B[2*v+1]);
+        }
     }
 };
+
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
 	
-	int n, q;
-	cin >> n >> q;
+	int n, m;
+	cin >> n >> m;
 	
 	vl A(n);
 	forn(i, n) cin >> A[i];
 	
-	SegmentTree S(n, A, 0);
+	SegmentTree S(n, A);
 	
-	forn(_, q){
-		int a, b, c, d;
-		cin >> a >> b >> c >> d;
-		a--; b--;
+	forn(_, m){
+		int k;
+		cin >> k;
 		
-		ll res = S.query(1, 0, n-1, a, b, d) - S.query(1, 0, n-1, a, b, c-1);
-		cout << res << "\n";
+		if (k == 1){
+			int pos;
+			ll x;
+			cin >> pos >> x;
+			pos--;
+			S.update(1, 0, n-1, pos, x);
+		} else {
+			int l, r;
+			cin >> l >> r;
+			l--; r--;
+			cout << S.query(1, 0, n-1, l, r).maxPrefix << "\n";
+		}
 	}
 	
     return 0;
