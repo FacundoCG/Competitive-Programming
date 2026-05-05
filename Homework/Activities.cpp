@@ -84,19 +84,14 @@ ll addMod(ll a, ll b, ll m = MOD){
 	return mod(res, m);
 }
 
-int findIndexFor(ll x, vector<ii> &A){
-	auto it = lower_bound(all(A), make_pair(x+1, x+1));
-	if (it == A.end()) return n;
-	return (int) (it - A.begin());
-}
+int findIndexFor(ll x, vector<ii> &A){ return (int) (lower_bound(all(A), make_pair(x+1, x+1)) - A.begin());}
 
 ll dp(int i, vii &A, vl &memo){
 	if (i == n) return 1;
 	
 	if (memo[i] == UNDEFINED){
 		memo[i] = dp(i+1, A, memo); // Ignoro al i-th
-		int j = findIndexFor(A[i].snd, A);
-		memo[i] = addMod(memo[i], dp(j, A, memo)); // Tomo al i-th y me muevo al primero valido
+		memo[i] = addMod(memo[i], dp(findIndexFor(A[i].snd, A), A, memo)); // Tomo al i-th y me muevo al primero valido
 	}
 	
 	return memo[i];
