@@ -125,31 +125,36 @@ int getIndex(int row, int col){ return row*m + col; }
 
 void solve(){
 	cin >> n >> m;
-	A.resize(n, vi(m));
+	A.assign(n, vi(m));
 	forn(i, n) forn(j, m) cin >> A[i][j];
 	
 	cin >> T;
 	vi queries(T+1); forsn(i, 1, T+1) cin >> queries[i];
 	
-	map<int, vii> unlockedAt;
+	vvii unlockedAt(T+1);
 	forn(i, n) forn(j, m){ // Busca cual es el T[x] mas grande tq A[i][j] > T[i]
 		auto it = lower_bound(all(queries), A[i][j]); it--;
-		unlockedAt[*it].pb(make_pair(i, j));
+		int indexUnlocked = (int) (it - queries.begin());
+		unlockedAt[indexUnlocked].pb(make_pair(i, j));
 	}
 	
-	map<int, int> res;
+	vi res(T+1);
 	DisjointSet G(n*m);
 	dforn(i, T+1){ // Recorrer las que se desbloquearon en el anio queries[i] y actualizar unfloodedAreas
 		int x = queries[i];
-		for (auto [row, col] : unlockedAt[x]) G.markPosition(getIndex(row, col));
-		for (auto [row, col] : unlockedAt[x]) for (auto [dx, dy] : directions){
-			if (isValidPosition(row+dx, col+dy, x)) G.unionSet(getIndex(row, col), getIndex(row+dx, col+dy));
+		for (pair<int, int> p : unlockedAt[i]) G.markPosition(getIndex(p.fst, p.snd));
+		for (pair<int, int> p : unlockedAt[i]) for (pair<int, int> q : directions){
+			if (isValidPosition(p.fst+q.fst, p.snd+q.snd, x)) G.unionSet(getIndex(p.fst, p.snd), getIndex(p.fst+q.fst, p.snd+q.snd));
 		}
 		
-		res[x] = (int) G.numOfComponents;
+		res[i] = (int) G.numOfComponents;
 	}
 	
-	forsn(i, 1, T+1) cout << res[queries[i]] << " ";
+	forsn(i, 1, T+1){
+		if (queries[i] == queries[i-1]) res[i] = res[i-1];
+		cout << res[i] << " "; 
+	}
+	
 	cout << "\n";
 }
 
