@@ -72,47 +72,31 @@ ostream & operator <<(ostream &os, const set<T> &s) {
 
 // ############################################################### //
 
-int mod(int a, int m = MOD){
-	int res = a % m;
-	if (res < 0) res += m;
-	return res;
-}
-
-int addMod(int a, int b, int m = MOD){
-	int res = mod(a, m) + mod(b, m);
-	return mod(res, m);
-}
-
+int addMod(int a, int b, int m = MOD){ return (a+b)%m;}
 int n, c; 
 
 void solve(){
 	vi neighbor(n+1); forsn(i, 1, n+1) cin >> neighbor[i];
 	
 	MOD = c;
-	vi prefixSum(SIZE(neighbor));
-	map<int, vi> prefixWithValue;
-	prefixWithValue[0] = {0};
+	vi prefixSum(SIZE(neighbor)), lastSeen(c, UNDEFINED);
+	lastSeen[0] = 0;
+	
+	int l, r;
 	forsn(i, 1, n+1) {
 		prefixSum[i] = addMod(prefixSum[i-1], neighbor[i]);
-		prefixWithValue[prefixSum[i]].pb(i);
+		if (lastSeen[prefixSum[i]] != UNDEFINED){ l = lastSeen[prefixSum[i]]+1; r = i; break;}
+		lastSeen[prefixSum[i]] = i;
 	}
 	
-	for (auto [_, vec] : prefixWithValue){
-		if (SIZE(vec) == 1) continue;
-		forsn(i, vec[0]+1, vec[1]+1) cout << i << " ";
-		cout << "\n";
-		return ;
-	}
+	forsn(i, l, r+1) cout << i << " ";
+	cout << "\n";
 }
 
 int main()
 {
     cin.tie(0);
     cin.sync_with_stdio(0);
-		
-	int t = 1; 
-	//~ cin >> t;
-	//~ forn(_, t) solve();
 	
 	while (cin >> c >> n){
 		if (c == 0) break;
