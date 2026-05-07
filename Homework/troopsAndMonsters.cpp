@@ -97,8 +97,6 @@ void solve(){
 	forn(i, n){		
 		ll time = A[i].time, totalAmount = A[i].amount, sand = A[i].sand;
 		ii toInsert = {sand, min(time-currentTime, totalAmount)};
-		assert(toInsert.snd >= 0);
-		//~ assert(currentTime + toInsert.snd <= time);
 		totalAmount -= toInsert.snd;
 
 		while (totalAmount > 0 && !collected.empty()){
