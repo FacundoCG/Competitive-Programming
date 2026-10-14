@@ -1,3 +1,4 @@
+
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -10,16 +11,15 @@ using vvb = vector<vb>;
 using vl = vector<ll>;
 using vvl = vector<vl>;
 using ii = pair<int,int>;
+using vii = vector<ii>;
 
 template <typename T>
 using vv = vector<vector<T>>;
 
 const ll UNDEFINED = -1;
-const int MAX_N = 1e5 + 1;
 const int MOD = 1e9 + 7;
 const int INF = 1e9;
 const ll LINF = 1e18;
-const ll zero = 0;
 const ld EPSILON = 1e-10;
 const double PI = acos(-1.0);
 
@@ -41,96 +41,140 @@ const double PI = acos(-1.0);
 // Show pair
 template <typename T1, typename T2>
 ostream & operator <<(ostream &os, const pair<T1, T2> &p) {
-    os << "{" << p.first << "," << p.second << "}";
-    return os;
+	os << "{" << p.first << "," << p.second << "}";
+	return os;
 }
 
 // Show vector
 template <typename T>
 ostream & operator <<(ostream &os, const vector<T> &v) {
-    os << "[";
-    forn(i, v.size()) {
-        if (i > 0) os << ",";
-        os << v[i];
-    }
-    return os << "]";
+	os << "[";
+	forn(i, v.size()) {
+		if (i > 0) os << ",";
+		os << v[i];
+	}
+	return os << "]";
 }
 
 // Show set
 template <typename T>
 ostream & operator <<(ostream &os, const set<T> &s) {
-    os << "{";
-    for(auto it = s.begin(); it != s.end(); it++){
-        if(it != s.begin()) os << ",";
-        os << *it;
-    }
-    return os << "}";
+	os << "{";
+	for(auto it = s.begin(); it != s.end(); it++){
+		if(it != s.begin()) os << ",";
+		os << *it;
+	}
+	return os << "}";
 }
 
 // ############################################################### //
 
-vector<set<int>> adj;
+const int MAX_N = 1001;
+bool adj[MAX_N+1][MAX_N+1];
+int memo[MAX_N+1][MAX_N+1][2];
 
-ll dp(int i, int j, vvl &memo, vvl &nextMove){
-	if (j == 0) return 1;
+int nextV[MAX_N+1][MAX_N+1][2];
+int nextJ[MAX_N+1][MAX_N+1][2];
+int inserted[MAX_N+1][MAX_N+1][2];
 
-	if (memo[i][j] == UNDEFINED){
-		memo[i][j] = 0;
-		for (int v : adj[i]) if (j & (1 << v)){
-			memo[i][j] = dp(v, j ^ (1 << v), memo, nextMove);
-			if (memo[i][j]){ nextMove[i][j] = v; break; }
+int n, m;
+
+struct Elem{ 
+	int next_v, next_j, next_elem; 
+	Elem (int _next_v = -1, int _next_j = -1, int _next_elem = -1)
+		: next_v(_next_v), next_j(_next_j), next_elem(_next_elem){}
+};
+
+// Me queda por procesar el intervalo: [v % n, (v+1) % n, ..., (v+length-1) % n] 
+// Si j = 0, estoy parado en v % n
+// Si j = 1, estoy parado en (v+length-1)%n
+
+int dp(int v, int length, int j){
+	if (length == 1) return 1;
+	
+	if (memo[v][length][j] == -1){
+		memo[v][length][j] = 0;
+		if (j == 0){
+			int u1 = (v+1) % n, u2 = (v+length-1) % n;
+			vector<Elem> nextMovement;
+			if (adj[v][u1]) {
+				memo[v][length][j] = memo[v][length][j] | dp(u1, length-1, 0);
+				nextMovement.pb(Elem(u1, 0, u1));
+			}
+			
+			if (adj[v][u2]) {
+				memo[v][length][j] = memo[v][length][j] | dp(u1, length-1, 1);
+				nextMovement.pb(Elem(u1, 1, u2));
+			}
+			
+			for (auto [next_v, next_j, next_elem] : nextMovement) if (dp(next_v, length-1, next_j)) {
+				nextV[v][length][j] = next_v;
+				nextJ[v][length][j] = next_j;
+				inserted[v][length][j] = next_elem;
+			}
+		} else {
+			int u = (v+length-1) % n;
+			int u1 = (v+length-2) % n, u2 = v % n; 
+			
+			vector<Elem> nextMovement;
+			if (adj[u][u1]) {
+				memo[v][length][j] = memo[v][length][j] | dp(v, length-1, 1);
+				nextMovement.pb(Elem(v, 1, u1));
+			}
+			
+			if (adj[u][u2]) {
+				memo[v][length][j] = memo[v][length][j] | dp(u2, length-1, 0);
+				nextMovement.pb(Elem(u2, 0, u2));
+			}
+			
+			for (auto [next_v, next_j, next_elem] : nextMovement) if (dp(next_v, length-1, next_j)) {
+				nextV[v][length][j] = next_v;
+				nextJ[v][length][j] = next_j;
+				inserted[v][length][j] = next_elem;
+			}
 		}
 	}
 	
-	return memo[i][j];
+	return memo[v][length][j];
 }
-
-void solve(){
-	int n, m; cin >> n >> m; 
 	
-	adj.resize(n);
+int main()
+{
+	cin.tie(0);
+	cin.sync_with_stdio(0);
+	
+	memset(adj, false, sizeof(adj));
+	memset(memo, -1, sizeof(memo));
+		
+	cin >> n >> m;
 	forn(_, m){
 		int v, u; cin >> v >> u;
 		v--; u--;
-		adj[v].insert(u);
-		adj[u].insert(v);
+		adj[v][u] = true;
+		adj[u][v] = true;
 	}
 	
-	int allCities = (1 << n)-1;
-	vvl memo(n, vl(allCities+1, UNDEFINED));
-	vvl nextMove(n, vl(allCities+1, UNDEFINED));
-	
-	forn(v, n){
-		bool res = dp(v, allCities ^ (1 << v), memo, nextMove);
-		if (!res) continue;
+	forn(v, n) if (dp(v, n, 0) == 1){
+		int currentV = v, currentLength = n, currentJ = 0;
+		vi res = { currentV };
+		set<int> s = { currentV };
 		
-		ll currentV = v;
-		ll currentJ = allCities ^ (1 << v);
-		
-		vl path = {currentV};
-		
-		forn(_, n-1){
-			currentV = nextMove[currentV][currentJ];
-			currentJ = currentJ ^ (1 << currentV);
-			path.pb(currentV);
+		while (currentLength > 1){
+			res.pb(inserted[currentV][currentLength][currentJ]);
+			s.insert(inserted[currentV][currentLength][currentJ]);
+			int oldV = currentV, oldJ = currentJ;
+			currentV = nextV[oldV][currentLength][oldJ];
+			currentJ = nextJ[oldV][currentLength][oldJ];
+			currentLength--;			
 		}
 		
-		assert(SIZE(path) == n);
-		for (ll x : path) cout << x+1 << "\n";
-		return ;
+		assert(SIZE(s) == n);
+		for (int x : res) cout << x+1 << "\n";
+		
+		return 0;
 	}
 	
 	cout << "-1\n";
-}
-
- 
-int main()
-{
-    cin.tie(0);
-    cin.sync_with_stdio(0);
-	
-	int t = 1; 
-	//~ cin >> t;
-	forn(_, t) solve();
 	return 0;
+	
 }
